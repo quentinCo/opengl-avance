@@ -16,15 +16,18 @@ public:
 
     int run();
 private:
+	// Window
     const size_t m_nWindowWidth = 1280;
     const size_t m_nWindowHeight = 720;
     glmlv::GLFWHandle m_GLFWHandle{ static_cast<int>(m_nWindowWidth), static_cast<int>(m_nWindowHeight), "Template" }; // Note: the handle must be declared before the creation of any object managing OpenGL resource (e.g. GLProgram, GLShader)
 
+	// App path
     const glmlv::fs::path m_AppPath;
     const std::string m_AppName;
     const std::string m_ImGuiIniFilename;
     const glmlv::fs::path m_ShadersRootPath;
 
+	// Objects with their buffers
 	glmlv::SimpleGeometry cube;
     GLuint m_cubeVBO = 0;
     GLuint m_cubeIBO = 0;
@@ -35,19 +38,38 @@ private:
     GLuint m_sphereIBO = 0;
     GLuint m_sphereVAO = 0;
 
+	// Shader program
     glmlv::GLProgram m_program;
 
-    GLuint u_modelViewProjMatrix;
-    GLuint u_modelViewMatrix;
-    GLuint u_normalMatrix;
+	// Camera matrix
+    GLuint u_modelViewProjMatrix = 0;
+    GLuint u_modelViewMatrix = 0;
+    GLuint u_normalMatrix = 0;
 
     glm::mat4 projMatrix;
-
     glmlv::ViewController viewController;
+	// TO_TEST_LIGHT
+	// Lights
+	GLuint u_directionalLightDir = 0;
+	GLuint u_directionalLightIntensity = 0;
+	glm::vec3 directionalLightDir;
+	glm::vec3 directionalLightIntensity;
 
-    //perso
-    void initUniform();
+	GLuint u_pointLightPosition = 0;
+	GLuint u_pointLightIntensity = 0;
+	glm::vec3 pointLightPosition;
+	glm::vec3 pointLightIntensity;
+
+	GLuint u_Kd;
+	glm::vec3 diffuseColor = glm::vec3(1,1,1);
+
+
+	// Functions
+	void gui(float clearColor[3]);
+
+    void initUniforms();
     void initVao(GLuint* vao, GLuint* vbo, GLuint* ibo);
     void initVboIbo(GLuint* vbo, GLuint* ibo, const glmlv::SimpleGeometry& object);
     void drawObject(GLuint* vao, const glmlv::SimpleGeometry& object, const glm::mat4& modelMatrix, const glm::mat4& viewMatrix);
+	void setUniformsValues(const glm::mat4& modelViewMatrix);
 };

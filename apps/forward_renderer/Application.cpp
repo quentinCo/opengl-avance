@@ -34,18 +34,9 @@ int Application::run()
         modelMatrix = glm::translate(glm::mat4(1.f), glm::vec3(0, 2, -6));
         drawObject(&m_sphereVAO, sphere, modelMatrix, viewMatrix);
 
-        // GUI code:
+        // GUI
         ImGui_ImplGlfwGL3_NewFrame();
-
-        {
-            ImGui::Begin("GUI");
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-            ImGui::ColorEditMode(ImGuiColorEditMode_RGB);
-            if (ImGui::ColorEdit3("clearColor", clearColor)) {
-                glClearColor(clearColor[0], clearColor[1], clearColor[2], 1.f);
-            }
-            ImGui::End();
-        }
+		gui(clearColor);
 
         const auto viewportSize = m_GLFWHandle.framebufferSize();
         glViewport(0, 0, viewportSize.x, viewportSize.y);
@@ -82,13 +73,14 @@ Application::Application(int argc, char** argv):
     
     glEnable(GL_DEPTH_TEST);
 
-    float aspectScreenRatio = static_cast<float>(m_nWindowWidth)/m_nWindowHeight;
-
-    projMatrix = glm::perspective(glm::radians(70.f), aspectScreenRatio, 0.1f, 100.f);
-
     m_program.use();
 
-    initUniform();
+	//Camera
+	float aspectScreenRatio = static_cast<float>(m_nWindowWidth) / m_nWindowHeight;
+	projMatrix = glm::perspective(glm::radians(70.f), aspectScreenRatio, 0.1f, 100.f);
+
+	//Init Uniforms Variables
+    initUniforms();
 
     //Cube
     cube = glmlv::makeCube();
@@ -98,6 +90,14 @@ Application::Application(int argc, char** argv):
     sphere = glmlv::makeSphere(16);
     initVboIbo(&m_sphereVBO, &m_sphereIBO, sphere);
     initVao(&m_sphereVAO, &m_sphereVBO, &m_sphereIBO);
+	// TO_TEST_LIGHT
+	//DirectionalLight
+	glm::vec3 directionalLightDir = glm::vec3(1, 1, 0);
+	glm::vec3 directionalLightIntensity = glm::vec3(0.25);
+
+	//PointLight
+	glm::vec3 pointLightPosition = glm::vec3(0);
+	glm::vec3 pointLightIntensity = glm::vec3(0.5);
 }
 
 Application::~Application()
@@ -115,11 +115,31 @@ Application::~Application()
 }
 
 // PRIVATE FUNCTIONS
-void Application::initUniform()
+void Application::gui(float clearColor[3])
 {
+	ImGui::Begin("GUI");
+	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+	ImGui::ColorEditMode(ImGuiColorEditMode_RGB);
+	if (ImGui::ColorEdit3("clearColor", clearColor)) {
+		glClearColor(clearColor[0], clearColor[1], clearColor[2], 1.f);
+	}
+
+	ImGui::End();
+}
+
+void Application::initUniforms()
+{
+	// Camera
     u_modelViewProjMatrix = glGetUniformLocation(m_program.glId(), "uModelViewProjMatrix");
     u_modelViewMatrix = glGetUniformLocation(m_program.glId(), "uModelViewMatrix");
     u_normalMatrix = glGetUniformLocation(m_program.glId(), "uNormalMatrix");
+	// TO_TEST_LIGHT
+	// Lights
+	u_directionalLightDir = glGetUniformLocation(m_program.glId(), "uDirectionalLightDir");
+	u_directionalLightIntensity = glGetUniformLocation(m_program.glId(), "uDirectionalLightIntensity");
+	u_pointLightPosition = glGetUniformLocation(m_program.glId(), "uPointLightPosition");
+	u_pointLightIntensity = glGetUniformLocation(m_program.glId(), "uPointLightIntensity");
+	u_Kd = glGetUniformLocation(m_program.glId(), "uKd");
 }
 
 void Application::initVao(GLuint* vao, GLuint* vbo, GLuint* ibo)
@@ -135,11 +155,17 @@ void Application::initVao(GLuint* vao, GLuint* vbo, GLuint* ibo)
 
     glBindBuffer(GL_ARRAY_BUFFER, *vbo);
 
-    glEnableVertexAttribArray(positionAttrLocation);
-    glVertexAttribPointer(positionAttrLocation, 3, GL_FLOAT, GL_FALSE, sizeof(glmlv::Vertex3f3f2f), (const GLvoid*) offsetof(glmlv::Vertex3f3f2f, position));
+    if (positionAttrLocation > 0)
+    {
+        glEnableVertexAttribArray(positionAttrLocation);
+        glVertexAttribPointer(positionAttrLocation, 3, GL_FLOAT, GL_FALSE, sizeof(glmlv::Vertex3f3f2f), (const GLvoid*) offsetof(glmlv::Vertex3f3f2f, position));
+    }
 
-    glEnableVertexAttribArray(normalAttrLocation);
-    glVertexAttribPointer(normalAttrLocation, 3, GL_FLOAT, GL_FALSE, sizeof(glmlv::Vertex3f3f2f), (const GLvoid*) offsetof(glmlv::Vertex3f3f2f, normal));
+    if (normalAttrLocation > 0)
+    {
+        glEnableVertexAttribArray(normalAttrLocation);
+        glVertexAttribPointer(normalAttrLocation, 3, GL_FLOAT, GL_FALSE, sizeof(glmlv::Vertex3f3f2f), (const GLvoid*) offsetof(glmlv::Vertex3f3f2f, normal));
+    }
 
     if (textAttrLocation > 0)
     {
@@ -178,14 +204,24 @@ void Application::initVboIbo(GLuint* vbo, GLuint* ibo, const glmlv::SimpleGeomet
 
 void Application::drawObject(GLuint* vao, const glmlv::SimpleGeometry& object, const glm::mat4& modelMatrix, const glm::mat4& viewMatrix)
 {
-    const auto modelViewMatrix = viewMatrix * modelMatrix;
-    glUniformMatrix4fv(u_modelViewProjMatrix, 1, GL_FALSE, glm::value_ptr(projMatrix * modelViewMatrix));
-    glUniformMatrix4fv(u_modelViewMatrix, 1, GL_FALSE, glm::value_ptr(modelViewMatrix));
-    glUniformMatrix4fv(u_normalMatrix, 1, GL_FALSE, glm::value_ptr(glm::transpose(glm::inverse(modelViewMatrix))));
+	setUniformsValues(viewMatrix * modelMatrix);
 
     glBindVertexArray(*vao);
 
     glDrawElements(GL_TRIANGLES, object.indexBuffer.size(), GL_UNSIGNED_INT, nullptr);
 
     glBindVertexArray(0);   
+}
+
+void Application::setUniformsValues(const glm::mat4& modelViewMatrix)
+{
+	glUniformMatrix4fv(u_modelViewProjMatrix, 1, GL_FALSE, glm::value_ptr(projMatrix * modelViewMatrix));
+	glUniformMatrix4fv(u_modelViewMatrix, 1, GL_FALSE, glm::value_ptr(modelViewMatrix));
+	glUniformMatrix4fv(u_normalMatrix, 1, GL_FALSE, glm::value_ptr(glm::transpose(glm::inverse(modelViewMatrix))));
+
+	glUniform3fv(u_directionalLightDir, 1, glm::value_ptr(directionalLightDir));
+	glUniform3fv(u_directionalLightIntensity, 1, glm::value_ptr(directionalLightIntensity));
+	glUniform3fv(u_pointLightPosition, 1, glm::value_ptr(pointLightPosition));
+	glUniform3fv(u_pointLightIntensity, 1, glm::value_ptr(pointLightIntensity));
+	glUniform3fv(u_Kd, 1, glm::value_ptr(diffuseColor));
 }
