@@ -123,6 +123,11 @@ void Application::gui(float clearColor[3])
 	if (ImGui::ColorEdit3("clearColor", clearColor)) {
 		glClearColor(clearColor[0], clearColor[1], clearColor[2], 1.f);
 	}
+	// TO_TEST_LIGHT
+	// -> surmment changer vec3 -> vec4, puis re vec3 pour les uniformes
+	ImGui::ColorEdit3("Diffuse Color", glm::value_ptr(diffuseColor));
+	ImGui::SliderFloat3("Directional Light Intensity", glm::value_ptr(directionalLightIntensity), 0, 1.f);
+	ImGui::SliderFloat3("Point Light Intensity", glm::value_ptr(pointLightIntensity), 0, 1.f);
 
 	ImGui::End();
 }
