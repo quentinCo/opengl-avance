@@ -18,11 +18,8 @@ uniform vec3 uKd;
 
 out vec3 fColor;
 
-//vec3 computeColor()// TO_DO
-
-void main()
+vec3 computeColor()
 {
-	// TO_TEST_LIGHT	
 	//  Pointlight transitional varibles
 	float distToPointLight = length(uPointLightPosition - vViewSpacePosition);
 	vec3 dirToPointLight = (uPointLightPosition - vViewSpacePosition) / distToPointLight;
@@ -33,7 +30,12 @@ void main()
 
 	vec3 lightIntensityToPoint = (pointLightIntensityToPoint + directionalLightIntensityToPoint) / (distToPointLight * distToPointLight);
 
-	fColor = uKd * lightIntensityToPoint;
+	return (uKd * lightIntensityToPoint);
+}
+
+void main()
+{
+	fColor = computeColor();
 
 	//fColor = vViewSpaceNormal;
 }

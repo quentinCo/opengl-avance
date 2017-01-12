@@ -48,7 +48,7 @@ private:
 
     glm::mat4 projMatrix;
     glmlv::ViewController viewController;
-	// TO_TEST_LIGHT
+
 	// Lights
 	GLuint u_directionalLightDir = 0;
 	GLuint u_directionalLightIntensity = 0;
@@ -60,6 +60,7 @@ private:
 	glm::vec3 pointLightPosition;
 	float pointLightIntensity;
 
+    // Color
 	GLuint u_Kd;
 	glm::vec3 diffuseCubeColor = glm::vec3(1,1,1);
     glm::vec3 diffuseSphereColor = glm::vec3(1,1,1);
