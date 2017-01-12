@@ -18,7 +18,7 @@ uniform vec3 uKd;
 
 out vec3 fColor;
 
-//vec3 computeColor() // TO_DO
+//vec3 computeColor()// TO_DO
 
 void main()
 {

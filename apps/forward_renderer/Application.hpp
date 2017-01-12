@@ -53,15 +53,16 @@ private:
 	GLuint u_directionalLightDir = 0;
 	GLuint u_directionalLightIntensity = 0;
 	glm::vec3 directionalLightDir;
-	glm::vec3 directionalLightIntensity;
+	float directionalLightIntensity;
 
 	GLuint u_pointLightPosition = 0;
 	GLuint u_pointLightIntensity = 0;
 	glm::vec3 pointLightPosition;
-	glm::vec3 pointLightIntensity;
+	float pointLightIntensity;
 
 	GLuint u_Kd;
-	glm::vec3 diffuseColor = glm::vec3(1,1,1);
+	glm::vec3 diffuseCubeColor = glm::vec3(1,1,1);
+    glm::vec3 diffuseSphereColor = glm::vec3(1,1,1);
 
 
 	// Functions
@@ -70,6 +71,6 @@ private:
     void initUniforms();
     void initVao(GLuint* vao, GLuint* vbo, GLuint* ibo);
     void initVboIbo(GLuint* vbo, GLuint* ibo, const glmlv::SimpleGeometry& object);
-    void drawObject(GLuint* vao, const glmlv::SimpleGeometry& object, const glm::mat4& modelMatrix, const glm::mat4& viewMatrix);
-	void setUniformsValues(const glm::mat4& modelViewMatrix);
+    void drawObject(GLuint* vao, const glmlv::SimpleGeometry& object, const glm::mat4& modelMatrix, const glm::mat4& viewMatrix, const glm::vec3& diffuseColor);
+	void setUniformsValues(const glm::mat4& modelViewMatrix, const glm::vec3& diffuseColor);
 };

@@ -29,10 +29,10 @@ int Application::run()
 
         glm::mat4 modelMatrix = glm::translate(glm::mat4(1.f), glm::vec3(0, 0, -5));
         glm::mat4 viewMatrix = viewController.getViewMatrix();
-        drawObject(&m_cubeVAO, cube, modelMatrix, viewMatrix);
+        drawObject(&m_cubeVAO, cube, modelMatrix, viewMatrix, diffuseCubeColor);
 
         modelMatrix = glm::translate(glm::mat4(1.f), glm::vec3(0, 2, -6));
-        drawObject(&m_sphereVAO, sphere, modelMatrix, viewMatrix);
+        drawObject(&m_sphereVAO, sphere, modelMatrix, viewMatrix, diffuseSphereColor);
 
         // GUI
         ImGui_ImplGlfwGL3_NewFrame();
@@ -92,12 +92,12 @@ Application::Application(int argc, char** argv):
     initVao(&m_sphereVAO, &m_sphereVBO, &m_sphereIBO);
 	// TO_TEST_LIGHT
 	//DirectionalLight
-	glm::vec3 directionalLightDir = glm::vec3(1, 1, 0);
-	glm::vec3 directionalLightIntensity = glm::vec3(0.25);
+	directionalLightDir = glm::vec3(1, 1, 0);
+	directionalLightIntensity = 25;
 
 	//PointLight
-	glm::vec3 pointLightPosition = glm::vec3(0);
-	glm::vec3 pointLightIntensity = glm::vec3(0.5);
+	pointLightPosition = glm::vec3(-5, 0, 0);
+	pointLightIntensity = 5;
 }
 
 Application::~Application()
@@ -125,9 +125,10 @@ void Application::gui(float clearColor[3])
 	}
 	// TO_TEST_LIGHT
 	// -> surmment changer vec3 -> vec4, puis re vec3 pour les uniformes
-	ImGui::ColorEdit3("Diffuse Color", glm::value_ptr(diffuseColor));
-	ImGui::SliderFloat3("Directional Light Intensity", glm::value_ptr(directionalLightIntensity), 0, 1.f);
-	ImGui::SliderFloat3("Point Light Intensity", glm::value_ptr(pointLightIntensity), 0, 1.f);
+	ImGui::ColorEdit3("Diffuse Cube Color", glm::value_ptr(diffuseCubeColor));    
+    ImGui::ColorEdit3("Diffuse Sphere Color", glm::value_ptr(diffuseSphereColor));
+	ImGui::SliderFloat("Directional Light Intensity", &directionalLightIntensity, 0, 100.f);
+	ImGui::SliderFloat("Point Light Intensity", &pointLightIntensity, 0, 100.f);
 
 	ImGui::End();
 }
@@ -160,11 +161,8 @@ void Application::initVao(GLuint* vao, GLuint* vbo, GLuint* ibo)
 
     glBindBuffer(GL_ARRAY_BUFFER, *vbo);
 
-    if (positionAttrLocation > 0)
-    {
-        glEnableVertexAttribArray(positionAttrLocation);
-        glVertexAttribPointer(positionAttrLocation, 3, GL_FLOAT, GL_FALSE, sizeof(glmlv::Vertex3f3f2f), (const GLvoid*) offsetof(glmlv::Vertex3f3f2f, position));
-    }
+    glEnableVertexAttribArray(positionAttrLocation);
+    glVertexAttribPointer(positionAttrLocation, 3, GL_FLOAT, GL_FALSE, sizeof(glmlv::Vertex3f3f2f), (const GLvoid*) offsetof(glmlv::Vertex3f3f2f, position));
 
     if (normalAttrLocation > 0)
     {
@@ -207,9 +205,9 @@ void Application::initVboIbo(GLuint* vbo, GLuint* ibo, const glmlv::SimpleGeomet
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void Application::drawObject(GLuint* vao, const glmlv::SimpleGeometry& object, const glm::mat4& modelMatrix, const glm::mat4& viewMatrix)
+void Application::drawObject(GLuint* vao, const glmlv::SimpleGeometry& object, const glm::mat4& modelMatrix, const glm::mat4& viewMatrix, const glm::vec3& diffuseColor)
 {
-	setUniformsValues(viewMatrix * modelMatrix);
+	setUniformsValues(viewMatrix * modelMatrix, diffuseColor);
 
     glBindVertexArray(*vao);
 
@@ -218,15 +216,18 @@ void Application::drawObject(GLuint* vao, const glmlv::SimpleGeometry& object, c
     glBindVertexArray(0);   
 }
 
-void Application::setUniformsValues(const glm::mat4& modelViewMatrix)
+void Application::setUniformsValues(const glm::mat4& modelViewMatrix, const glm::vec3& diffuseColor)
 {
 	glUniformMatrix4fv(u_modelViewProjMatrix, 1, GL_FALSE, glm::value_ptr(projMatrix * modelViewMatrix));
 	glUniformMatrix4fv(u_modelViewMatrix, 1, GL_FALSE, glm::value_ptr(modelViewMatrix));
 	glUniformMatrix4fv(u_normalMatrix, 1, GL_FALSE, glm::value_ptr(glm::transpose(glm::inverse(modelViewMatrix))));
-
+    //TO_TEST_LIGHT
 	glUniform3fv(u_directionalLightDir, 1, glm::value_ptr(directionalLightDir));
-	glUniform3fv(u_directionalLightIntensity, 1, glm::value_ptr(directionalLightIntensity));
-	glUniform3fv(u_pointLightPosition, 1, glm::value_ptr(pointLightPosition));
-	glUniform3fv(u_pointLightIntensity, 1, glm::value_ptr(pointLightIntensity));
+    glm::vec3 directionalLightIntensityVec3 = glm::vec3(directionalLightIntensity);
+	glUniform3fv(u_directionalLightIntensity, 1, glm::value_ptr(directionalLightIntensityVec3));
+	
+    glUniform3fv(u_pointLightPosition, 1, glm::value_ptr(pointLightPosition));
+    glm::vec3 pointLightIntensityVec3 = glm::vec3(pointLightIntensity);
+	glUniform3fv(u_pointLightIntensity, 1, glm::value_ptr(pointLightIntensityVec3));
 	glUniform3fv(u_Kd, 1, glm::value_ptr(diffuseColor));
 }
