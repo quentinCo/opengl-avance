@@ -14,6 +14,7 @@
 
 // glmlv
 #include <glmlv/imgui_impl_glfw_gl3.hpp>
+#include <glmlv/Image2DRGBA.hpp>
 
 int Application::run()
 {
@@ -29,10 +30,10 @@ int Application::run()
 
         glm::mat4 modelMatrix = glm::translate(glm::mat4(1.f), glm::vec3(0, 0, -5));
         glm::mat4 viewMatrix = viewController.getViewMatrix();
-        drawObject(&m_cubeVAO, cube, modelMatrix, viewMatrix, diffuseCubeColor);
+        drawObject(&m_cubeVAO, &m_texCube, cube, modelMatrix, viewMatrix, diffuseCubeColor);
 
         modelMatrix = glm::translate(glm::mat4(1.f), glm::vec3(0, 2, -6));
-        drawObject(&m_sphereVAO, sphere, modelMatrix, viewMatrix, diffuseSphereColor);
+        drawObject(&m_sphereVAO, &m_texSphere, sphere, modelMatrix, viewMatrix, diffuseSphereColor);
 
         // GUI
         ImGui_ImplGlfwGL3_NewFrame();
@@ -63,6 +64,7 @@ Application::Application(int argc, char** argv):
     m_AppName { m_AppPath.stem().string() },
     m_ImGuiIniFilename { m_AppName + ".imgui.ini" },
     m_ShadersRootPath { m_AppPath.parent_path() / "shaders" },
+    m_AssetsRootPath { m_AppPath.parent_path() / "assets" },
     viewController(m_GLFWHandle.window())
 {
     ImGui::GetIO().IniFilename = m_ImGuiIniFilename.c_str(); // At exit, ImGUI will store its windows positions in this file
@@ -70,10 +72,8 @@ Application::Application(int argc, char** argv):
     // Here we load and compile shaders from the library
     //-----------------------------------------------------------------SHADER----------------------------------------------------SHADER------------
     m_program = glmlv::compileProgram({ m_ShadersRootPath / m_AppName / "forward.vs.glsl", m_ShadersRootPath / m_AppName / "forward.fs.glsl" });
-    
-    glEnable(GL_DEPTH_TEST);
-
     m_program.use();
+    glEnable(GL_DEPTH_TEST);
 
 	//Camera
 	float aspectScreenRatio = static_cast<float>(m_nWindowWidth) / m_nWindowHeight;
@@ -86,10 +86,12 @@ Application::Application(int argc, char** argv):
     cube = glmlv::makeCube();
     initVboIbo(&m_cubeVBO, &m_cubeIBO, cube);
     initVao(&m_cubeVAO, &m_cubeVBO, &m_cubeIBO);
+    initTexBuffer(&m_texCube, "red_panda_2.jpg");
     //Sphere
     sphere = glmlv::makeSphere(16);
     initVboIbo(&m_sphereVBO, &m_sphereIBO, sphere);
     initVao(&m_sphereVAO, &m_sphereVBO, &m_sphereIBO);
+    initTexBuffer(&m_texSphere, "red_panda_1.jpg");
 
 	//DirectionalLight
 	directionalLightDir = glm::vec3(1, 1, 0);
@@ -98,6 +100,9 @@ Application::Application(int argc, char** argv):
 	//PointLight
 	pointLightPosition = glm::vec3(-5, 0, 0);
 	pointLightIntensity = 5;
+
+    //Sampler
+    initSampler();
 }
 
 Application::~Application()
@@ -109,6 +114,10 @@ Application::~Application()
     if (m_sphereVBO) glDeleteBuffers(1, &m_sphereVBO);
     if (m_sphereIBO) glDeleteBuffers(1, &m_sphereIBO);
     if (m_sphereVAO) glDeleteBuffers(1, &m_sphereVAO);
+
+    if (m_texCube) glDeleteTextures(1, &m_texCube);
+    if (m_texSphere) glDeleteTextures(1, &m_texSphere);
+    if (m_sampler) glDeleteSamplers(1, &m_sampler);
 
     ImGui_ImplGlfwGL3_Shutdown();
     glfwTerminate();
@@ -132,6 +141,14 @@ void Application::gui(float clearColor[3])
 	ImGui::SliderFloat("Directional Light Intensity", &directionalLightIntensity, 0, 100.f);
 	ImGui::SliderFloat("Point Light Intensity", &pointLightIntensity, 0, 100.f);
 
+    // Texture
+    std::string activeTextureButton = activeTexture? "Without Textures": "With Textures";
+    if (ImGui::Button(activeTextureButton.c_str()))
+    {
+        activeTexture = !activeTexture;
+        unBindTex(); // TO MOVE
+    }
+
 	ImGui::End();
 }
 
@@ -148,6 +165,28 @@ void Application::initUniforms()
 	u_pointLightPosition = glGetUniformLocation(m_program.glId(), "uPointLightPosition");
 	u_pointLightIntensity = glGetUniformLocation(m_program.glId(), "uPointLightIntensity");
 	u_Kd = glGetUniformLocation(m_program.glId(), "uKd");
+
+    u_activeTexture = glGetUniformLocation(m_program.glId(), "uActiveTexture");
+    u_KdSampler = glGetUniformLocation(m_program.glId(), "uKdSampler");
+}
+
+void Application::initSampler()
+{
+    glGenSamplers(1, &m_sampler);
+    glSamplerParameteri(m_sampler, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glSamplerParameteri(m_sampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+}
+
+void Application::initTexBuffer(GLuint* m_texObject, const std::string& nameFile)
+{
+    auto imageTex = glmlv::readImage(m_AssetsRootPath / m_AppName / "textures" / nameFile);
+
+    glActiveTexture(GL_TEXTURE0);
+    glGenTextures(1, m_texObject);
+    glBindTexture(GL_TEXTURE_2D, *m_texObject);
+    glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB32F, imageTex.width(), imageTex.height());
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, imageTex.width(), imageTex.height(), GL_RGBA, GL_UNSIGNED_BYTE, imageTex.data());
+    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void Application::initVao(GLuint* vao, GLuint* vbo, GLuint* ibo)
@@ -160,9 +199,7 @@ void Application::initVao(GLuint* vao, GLuint* vbo, GLuint* ibo)
     const GLint textAttrLocation = glGetAttribLocation(m_program.glId(), "aTexCoords");
 
     glBindVertexArray(*vao);
-
     glBindBuffer(GL_ARRAY_BUFFER, *vbo);
-
     glEnableVertexAttribArray(positionAttrLocation);
     glVertexAttribPointer(positionAttrLocation, 3, GL_FLOAT, GL_FALSE, sizeof(glmlv::Vertex3f3f2f), (const GLvoid*) offsetof(glmlv::Vertex3f3f2f, position));
 
@@ -179,9 +216,7 @@ void Application::initVao(GLuint* vao, GLuint* vbo, GLuint* ibo)
     }
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *ibo);
-
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-
     glBindVertexArray(0);
 }
 
@@ -189,32 +224,24 @@ void Application::initVboIbo(GLuint* vbo, GLuint* ibo, const glmlv::SimpleGeomet
 {
     // VBO
     glGenBuffers(1, vbo);
-
     glBindBuffer(GL_ARRAY_BUFFER, *vbo);
-
     glBufferStorage(GL_ARRAY_BUFFER, object.vertexBuffer.size() * sizeof(glmlv::Vertex3f3f2f), object.vertexBuffer.data(), 0);
-
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 
     // IBO
     glGenBuffers(1, ibo);
-
     glBindBuffer(GL_ARRAY_BUFFER, *ibo);
-
     glBufferStorage(GL_ARRAY_BUFFER, object.indexBuffer.size() * sizeof(uint32_t), object.indexBuffer.data(), 0);
-
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void Application::drawObject(GLuint* vao, const glmlv::SimpleGeometry& object, const glm::mat4& modelMatrix, const glm::mat4& viewMatrix, const glm::vec3& diffuseColor)
+void Application::drawObject(GLuint* vao, GLuint* m_texObject, const glmlv::SimpleGeometry& object, const glm::mat4& modelMatrix, const glm::mat4& viewMatrix, const glm::vec3& diffuseColor)
 {
 	setUniformsValues(viewMatrix * modelMatrix, diffuseColor);
-
+    if(activeTexture) bindTex(m_texObject);
     glBindVertexArray(*vao);
-
     glDrawElements(GL_TRIANGLES, object.indexBuffer.size(), GL_UNSIGNED_INT, nullptr);
-
     glBindVertexArray(0);   
 }
 
@@ -236,4 +263,26 @@ void Application::setUniformsValues(const glm::mat4& modelViewMatrix, const glm:
 
     // Color
 	glUniform3fv(u_Kd, 1, glm::value_ptr(diffuseColor));
+
+    // "Texture"
+    glUniform1i(u_activeTexture, activeTexture);
 }
+
+void Application::bindTex(GLuint* m_texObject)
+{
+    glActiveTexture(GL_TEXTURE0);
+    glUniform1i(u_KdSampler, 0);
+    glBindSampler(0, m_sampler);
+    glBindTexture(GL_TEXTURE_2D, *m_texObject);
+}
+
+void Application::unBindTex()
+{
+    glActiveTexture(GL_TEXTURE0);
+    glUniform1i(u_KdSampler, 0);
+    glBindSampler(0, 0); // MEH
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+
+

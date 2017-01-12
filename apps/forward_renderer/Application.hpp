@@ -26,6 +26,7 @@ private:
     const std::string m_AppName;
     const std::string m_ImGuiIniFilename;
     const glmlv::fs::path m_ShadersRootPath;
+    const glmlv::fs::path m_AssetsRootPath;
 
 	// Objects with their buffers
 	glmlv::SimpleGeometry cube;
@@ -65,13 +66,26 @@ private:
 	glm::vec3 diffuseCubeColor = glm::vec3(1,1,1);
     glm::vec3 diffuseSphereColor = glm::vec3(1,1,1);
 
+    // Texture
+    GLuint u_activeTexture;
+    bool activeTexture = true;
+    GLuint u_KdSampler;
+
+    GLuint m_texCube;
+    GLuint m_texSphere;
+    GLuint m_sampler;
+
 
 	// Functions
 	void gui(float clearColor[3]);
 
     void initUniforms();
+    void initSampler();
+    void initTexBuffer(GLuint* m_texObject, const std::string& nameFile);
     void initVao(GLuint* vao, GLuint* vbo, GLuint* ibo);
     void initVboIbo(GLuint* vbo, GLuint* ibo, const glmlv::SimpleGeometry& object);
-    void drawObject(GLuint* vao, const glmlv::SimpleGeometry& object, const glm::mat4& modelMatrix, const glm::mat4& viewMatrix, const glm::vec3& diffuseColor);
+    void drawObject(GLuint* vao, GLuint* m_texObject, const glmlv::SimpleGeometry& object, const glm::mat4& modelMatrix, const glm::mat4& viewMatrix, const glm::vec3& diffuseColor);
 	void setUniformsValues(const glm::mat4& modelViewMatrix, const glm::vec3& diffuseColor);
+    void bindTex(GLuint* m_texObject);
+    void unBindTex();
 };
