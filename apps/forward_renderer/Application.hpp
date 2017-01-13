@@ -8,6 +8,8 @@
 #include <glmlv/simple_geometry.hpp>
 #include <glmlv/ViewController.hpp>
 
+#include "Camera.hpp"
+
 class Application
 {
 public:
@@ -47,8 +49,7 @@ private:
     GLuint u_modelViewMatrix = 0;
     GLuint u_normalMatrix = 0;
 
-    glm::mat4 projMatrix;
-    glmlv::ViewController viewController;
+	qc::Camera camera;
 
 	// Lights
 	GLuint u_directionalLightDir = 0;
@@ -84,8 +85,8 @@ private:
     void initTexBuffer(GLuint* m_texObject, const std::string& nameFile);
     void initVao(GLuint* vao, GLuint* vbo, GLuint* ibo);
     void initVboIbo(GLuint* vbo, GLuint* ibo, const glmlv::SimpleGeometry& object);
-    void drawObject(GLuint* vao, GLuint* m_texObject, const glmlv::SimpleGeometry& object, const glm::mat4& modelMatrix, const glm::mat4& viewMatrix, const glm::vec3& diffuseColor);
-	void setUniformsValues(const glm::mat4& modelViewMatrix, const glm::vec3& diffuseColor);
+    void drawObject(GLuint* vao, GLuint* m_texObject, const glmlv::SimpleGeometry& object, const glm::mat4& modelMatrix, const glm::vec3& diffuseColor);
+	void setUniformsValues(const glm::mat4& modelMatrix, const glm::vec3& diffuseColor);
     void bindTex(GLuint* m_texObject);
     void unBindTex();
 };

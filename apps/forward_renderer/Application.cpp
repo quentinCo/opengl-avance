@@ -29,11 +29,10 @@ int Application::run()
         // Put here rendering code
 
         glm::mat4 modelMatrix = glm::translate(glm::mat4(1.f), glm::vec3(0, 0, -5));
-        glm::mat4 viewMatrix = viewController.getViewMatrix();
-        drawObject(&m_cubeVAO, &m_texCube, cube, modelMatrix, viewMatrix, diffuseCubeColor);
+        drawObject(&m_cubeVAO, &m_texCube, cube, modelMatrix, diffuseCubeColor);
 
         modelMatrix = glm::translate(glm::mat4(1.f), glm::vec3(0, 2, -6));
-        drawObject(&m_sphereVAO, &m_texSphere, sphere, modelMatrix, viewMatrix, diffuseSphereColor);
+        drawObject(&m_sphereVAO, &m_texSphere, sphere, modelMatrix, diffuseSphereColor);
 
         // GUI
         ImGui_ImplGlfwGL3_NewFrame();
@@ -52,7 +51,7 @@ int Application::run()
         auto ellapsedTime = glfwGetTime() - seconds;
         auto guiHasFocus = ImGui::GetIO().WantCaptureMouse || ImGui::GetIO().WantCaptureKeyboard;
         if (!guiHasFocus) {
-            viewController.update(float(ellapsedTime));
+            camera.updateViewController(float(ellapsedTime));
         }
     }
 
@@ -65,7 +64,7 @@ Application::Application(int argc, char** argv):
     m_ImGuiIniFilename { m_AppName + ".imgui.ini" },
     m_ShadersRootPath { m_AppPath.parent_path() / "shaders" },
     m_AssetsRootPath { m_AppPath.parent_path() / "assets" },
-    viewController(m_GLFWHandle.window())
+	camera(m_GLFWHandle.window(), glm::radians(70.f), (static_cast<float>(m_nWindowWidth) / m_nWindowHeight))
 {
     ImGui::GetIO().IniFilename = m_ImGuiIniFilename.c_str(); // At exit, ImGUI will store its windows positions in this file
    
@@ -74,11 +73,7 @@ Application::Application(int argc, char** argv):
     m_program = glmlv::compileProgram({ m_ShadersRootPath / m_AppName / "forward.vs.glsl", m_ShadersRootPath / m_AppName / "forward.fs.glsl" });
     m_program.use();
     glEnable(GL_DEPTH_TEST);
-
-	//Camera
-	float aspectScreenRatio = static_cast<float>(m_nWindowWidth) / m_nWindowHeight;
-	projMatrix = glm::perspective(glm::radians(70.f), aspectScreenRatio, 0.1f, 100.f);
-
+	
 	//Init Uniforms Variables
     initUniforms();
 
@@ -236,21 +231,21 @@ void Application::initVboIbo(GLuint* vbo, GLuint* ibo, const glmlv::SimpleGeomet
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void Application::drawObject(GLuint* vao, GLuint* m_texObject, const glmlv::SimpleGeometry& object, const glm::mat4& modelMatrix, const glm::mat4& viewMatrix, const glm::vec3& diffuseColor)
+void Application::drawObject(GLuint* vao, GLuint* m_texObject, const glmlv::SimpleGeometry& object, const glm::mat4& modelMatrix, const glm::vec3& diffuseColor)
 {
-	setUniformsValues(viewMatrix * modelMatrix, diffuseColor);
+	setUniformsValues(modelMatrix, diffuseColor);
     if(activeTexture) bindTex(m_texObject);
     glBindVertexArray(*vao);
     glDrawElements(GL_TRIANGLES, object.indexBuffer.size(), GL_UNSIGNED_INT, nullptr);
     glBindVertexArray(0);   
 }
 
-void Application::setUniformsValues(const glm::mat4& modelViewMatrix, const glm::vec3& diffuseColor)
+void Application::setUniformsValues(const glm::mat4& modelMatrix, const glm::vec3& diffuseColor)
 {
     // Camera
-	glUniformMatrix4fv(u_modelViewProjMatrix, 1, GL_FALSE, glm::value_ptr(projMatrix * modelViewMatrix));
-	glUniformMatrix4fv(u_modelViewMatrix, 1, GL_FALSE, glm::value_ptr(modelViewMatrix));
-	glUniformMatrix4fv(u_normalMatrix, 1, GL_FALSE, glm::value_ptr(glm::transpose(glm::inverse(modelViewMatrix))));
+	glUniformMatrix4fv(u_modelViewProjMatrix, 1, GL_FALSE, glm::value_ptr(camera.computeModelViewProjMatrix(modelMatrix)));
+	glUniformMatrix4fv(u_modelViewMatrix, 1, GL_FALSE, glm::value_ptr(camera.computeModelViewMatrix(modelMatrix)));
+	glUniformMatrix4fv(u_normalMatrix, 1, GL_FALSE, glm::value_ptr(camera.computeNormalMatrix(modelMatrix)));
 
     // Lights
 	glUniform3fv(u_directionalLightDir, 1, glm::value_ptr(directionalLightDir));
