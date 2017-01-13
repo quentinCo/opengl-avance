@@ -29,10 +29,10 @@ int Application::run()
         // Put here rendering code
 
         glm::mat4 modelMatrix = glm::translate(glm::mat4(1.f), glm::vec3(0, 0, -5));
-        drawObject(&m_cubeVAO, &m_texCube, m_cubeIBO, modelMatrix, diffuseCubeColor);
+        drawObject(m_cubeVAO, &m_texCube, m_cubeIBO, modelMatrix, diffuseCubeColor);
 
         modelMatrix = glm::translate(glm::mat4(1.f), glm::vec3(0, 2, -6));
-        drawObject(&m_sphereVAO, &m_texSphere, m_sphereIBO, modelMatrix, diffuseSphereColor);
+        drawObject(m_sphereVAO, &m_texSphere, m_sphereIBO, modelMatrix, diffuseSphereColor);
 
         // GUI
         ImGui_ImplGlfwGL3_NewFrame();
@@ -80,12 +80,12 @@ Application::Application(int argc, char** argv):
     //Cube
 	glmlv::SimpleGeometry cube = glmlv::makeCube();
     initVboIbo(m_cubeVBO, m_cubeIBO, cube);
-    initVao(&m_cubeVAO, m_cubeVBO, m_cubeIBO);
+    m_cubeVAO = std::make_shared<qc::ArrayObject<glmlv::Vertex3f3f2f>>(m_cubeVBO, m_cubeIBO, m_program);
     initTexBuffer(&m_texCube, "red_panda_2.jpg");
     //Sphere
 	glmlv::SimpleGeometry sphere = glmlv::makeSphere(16);
     initVboIbo(m_sphereVBO, m_sphereIBO, sphere);
-    initVao(&m_sphereVAO, m_sphereVBO, m_sphereIBO);
+	m_sphereVAO = std::make_shared<qc::ArrayObject<glmlv::Vertex3f3f2f>>(m_sphereVBO, m_sphereIBO, m_program);
     initTexBuffer(&m_texSphere, "red_panda_1.jpg");
 
 	//DirectionalLight
@@ -102,10 +102,6 @@ Application::Application(int argc, char** argv):
 
 Application::~Application()
 {
-    if (m_cubeVAO) glDeleteBuffers(1, &m_cubeVAO);
-
-    if (m_sphereVAO) glDeleteBuffers(1, &m_sphereVAO);
-
     if (m_texCube) glDeleteTextures(1, &m_texCube);
     if (m_texSphere) glDeleteTextures(1, &m_texSphere);
     if (m_sampler) glDeleteSamplers(1, &m_sampler);
@@ -180,37 +176,6 @@ void Application::initTexBuffer(GLuint* m_texObject, const std::string& nameFile
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void Application::initVao(GLuint* vao, const std::shared_ptr<qc::BufferObject<glmlv::Vertex3f3f2f>>& vbo, const std::shared_ptr<qc::BufferObject<uint32_t>>& ibo)
-{
-    glGenVertexArrays(1, vao);
-
-    // Here we use glGetAttribLocation(program, attribname) to obtain attrib locations; We could also directly use locations if they are set in the vertex shader (cf. triangle app)
-    const GLint positionAttrLocation = glGetAttribLocation(m_program.glId(), "aPosition");
-    const GLint normalAttrLocation = glGetAttribLocation(m_program.glId(), "aNormal");
-    const GLint textAttrLocation = glGetAttribLocation(m_program.glId(), "aTexCoords");
-
-    glBindVertexArray(*vao);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo->getBufferPointer());
-    glEnableVertexAttribArray(positionAttrLocation);
-    glVertexAttribPointer(positionAttrLocation, 3, GL_FLOAT, GL_FALSE, sizeof(glmlv::Vertex3f3f2f), (const GLvoid*) offsetof(glmlv::Vertex3f3f2f, position));
-
-    if (normalAttrLocation > 0)
-    {
-        glEnableVertexAttribArray(normalAttrLocation);
-        glVertexAttribPointer(normalAttrLocation, 3, GL_FLOAT, GL_FALSE, sizeof(glmlv::Vertex3f3f2f), (const GLvoid*) offsetof(glmlv::Vertex3f3f2f, normal));
-    }
-
-    if (textAttrLocation > 0)
-    {
-        glEnableVertexAttribArray(textAttrLocation);
-        glVertexAttribPointer(textAttrLocation, 2, GL_FLOAT, GL_FALSE, sizeof(glmlv::Vertex3f3f2f), (const GLvoid*) offsetof(glmlv::Vertex3f3f2f, texCoords));
-    }
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo->getBufferPointer());
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-}
-
 void Application::initVboIbo(std::shared_ptr<qc::BufferObject<glmlv::Vertex3f3f2f>>& vbo, std::shared_ptr<qc::BufferObject<uint32_t>>& ibo, const glmlv::SimpleGeometry& object)
 {
     // VBO
@@ -219,11 +184,11 @@ void Application::initVboIbo(std::shared_ptr<qc::BufferObject<glmlv::Vertex3f3f2
 	ibo = std::make_shared<qc::BufferObject<uint32_t>>(GL_ARRAY_BUFFER, object.indexBuffer);
 }
 
-void Application::drawObject(GLuint* vao, GLuint* m_texObject, const std::shared_ptr<qc::BufferObject<uint32_t>>& ibo, const glm::mat4& modelMatrix, const glm::vec3& diffuseColor)
+void Application::drawObject(const std::shared_ptr<qc::ArrayObject<glmlv::Vertex3f3f2f>>& vao, GLuint* m_texObject, const std::shared_ptr<qc::BufferObject<uint32_t>>& ibo, const glm::mat4& modelMatrix, const glm::vec3& diffuseColor)
 {
 	setUniformsValues(modelMatrix, diffuseColor);
     if(activeTexture) bindTex(m_texObject);
-    glBindVertexArray(*vao);
+    glBindVertexArray(vao->getArrayPointer());
     glDrawElements(GL_TRIANGLES, ibo->getSizeBuffer(), GL_UNSIGNED_INT, nullptr);
     glBindVertexArray(0);   
 }
