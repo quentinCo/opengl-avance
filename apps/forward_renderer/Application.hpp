@@ -2,19 +2,14 @@
 
 #include <vector>
 #include <memory>
-#include <thread>
-#include <chrono>
-#include <mutex>
 
 #include <glmlv/filesystem.hpp>
 #include <glmlv/GLFWHandle.hpp>
 #include <glmlv/GLProgram.hpp>
 #include <glmlv/simple_geometry.hpp>
-#include <glmlv/ViewController.hpp>
 
 #include "Camera.hpp"
-#include "BufferObject.hpp"
-#include "ArrayObject.hpp"
+#include "Mesh.hpp"
 
 class Application
 {
@@ -37,13 +32,8 @@ private:
     const glmlv::fs::path m_AssetsRootPath;
 
 	// Objects with their buffers
-	std::shared_ptr<qc::BufferObject<glmlv::Vertex3f3f2f>> m_cubeVBO;
-	std::shared_ptr<qc::BufferObject<uint32_t>> m_cubeIBO;
-	std::shared_ptr<qc::ArrayObject<glmlv::Vertex3f3f2f>> m_cubeVAO;
-
-	std::shared_ptr<qc::BufferObject<glmlv::Vertex3f3f2f>> m_sphereVBO;
-	std::shared_ptr<qc::BufferObject<uint32_t>> m_sphereIBO;
-	std::shared_ptr<qc::ArrayObject<glmlv::Vertex3f3f2f>> m_sphereVAO;
+	qc::Mesh cube;
+	qc::Mesh sphere;
 
 	// Shader program
     glmlv::GLProgram m_program;
@@ -87,8 +77,7 @@ private:
     void initUniforms();
     void initSampler();
     void initTexBuffer(GLuint* m_texObject, const std::string& nameFile);
-    void initVboIbo(std::shared_ptr<qc::BufferObject<glmlv::Vertex3f3f2f>>& vbo, std::shared_ptr<qc::BufferObject<uint32_t>>& ibo, const glmlv::SimpleGeometry& object);
-	void drawObject(const std::shared_ptr<qc::ArrayObject<glmlv::Vertex3f3f2f>>& vao, GLuint* m_texObject, const std::shared_ptr<qc::BufferObject<uint32_t>>& ibo, const glm::mat4& modelMatrix, const glm::vec3& diffuseColor);
+    void drawObject(const qc::Mesh& mesh, GLuint* m_texObject, const glm::vec3& diffuseColor);
 	void setUniformsValues(const glm::mat4& modelMatrix, const glm::vec3& diffuseColor);
     void bindTex(GLuint* m_texObject);
     void unBindTex();

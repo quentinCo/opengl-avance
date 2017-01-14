@@ -28,11 +28,9 @@ int Application::run()
 
         // Put here rendering code
 
-        glm::mat4 modelMatrix = glm::translate(glm::mat4(1.f), glm::vec3(0, 0, -5));
-        drawObject(m_cubeVAO, &m_texCube, m_cubeIBO, modelMatrix, diffuseCubeColor);
+        drawObject(cube, &m_texCube, diffuseCubeColor);
 
-        modelMatrix = glm::translate(glm::mat4(1.f), glm::vec3(0, 2, -6));
-        drawObject(m_sphereVAO, &m_texSphere, m_sphereIBO, modelMatrix, diffuseSphereColor);
+        drawObject(sphere, &m_texSphere, diffuseSphereColor);
 
         // GUI
         ImGui_ImplGlfwGL3_NewFrame();
@@ -78,15 +76,13 @@ Application::Application(int argc, char** argv):
     initUniforms();
 
     //Cube
-	glmlv::SimpleGeometry cube = glmlv::makeCube();
-    initVboIbo(m_cubeVBO, m_cubeIBO, cube);
-    m_cubeVAO = std::make_shared<qc::ArrayObject<glmlv::Vertex3f3f2f>>(m_cubeVBO, m_cubeIBO, m_program);
-    initTexBuffer(&m_texCube, "red_panda_2.jpg");
+	glmlv::SimpleGeometry simpleCube = glmlv::makeCube();
+	cube = qc::Mesh(simpleCube, m_program, glm::vec3(0, 0, -5));
+	initTexBuffer(&m_texCube, "red_panda_2.jpg");
     //Sphere
-	glmlv::SimpleGeometry sphere = glmlv::makeSphere(16);
-    initVboIbo(m_sphereVBO, m_sphereIBO, sphere);
-	m_sphereVAO = std::make_shared<qc::ArrayObject<glmlv::Vertex3f3f2f>>(m_sphereVBO, m_sphereIBO, m_program);
-    initTexBuffer(&m_texSphere, "red_panda_1.jpg");
+	glmlv::SimpleGeometry simpleSphere = glmlv::makeSphere(16);
+	sphere = qc::Mesh(simpleSphere, m_program, glm::vec3(0, 2, -6));
+	initTexBuffer(&m_texSphere, "red_panda_1.jpg");
 
 	//DirectionalLight
 	directionalLightDir = glm::vec3(1, 1, 0);
@@ -176,21 +172,11 @@ void Application::initTexBuffer(GLuint* m_texObject, const std::string& nameFile
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void Application::initVboIbo(std::shared_ptr<qc::BufferObject<glmlv::Vertex3f3f2f>>& vbo, std::shared_ptr<qc::BufferObject<uint32_t>>& ibo, const glmlv::SimpleGeometry& object)
+void Application::drawObject(const qc::Mesh& mesh, GLuint* m_texObject, const glm::vec3& diffuseColor)
 {
-    // VBO
-	vbo = std::make_shared<qc::BufferObject<glmlv::Vertex3f3f2f>>(GL_ARRAY_BUFFER, object.vertexBuffer);
-    // IBO
-	ibo = std::make_shared<qc::BufferObject<uint32_t>>(GL_ARRAY_BUFFER, object.indexBuffer);
-}
-
-void Application::drawObject(const std::shared_ptr<qc::ArrayObject<glmlv::Vertex3f3f2f>>& vao, GLuint* m_texObject, const std::shared_ptr<qc::BufferObject<uint32_t>>& ibo, const glm::mat4& modelMatrix, const glm::vec3& diffuseColor)
-{
-	setUniformsValues(modelMatrix, diffuseColor);
+	setUniformsValues(mesh.getModelMatrix(), diffuseColor);
     if(activeTexture) bindTex(m_texObject);
-    glBindVertexArray(vao->getArrayPointer());
-    glDrawElements(GL_TRIANGLES, ibo->getSizeBuffer(), GL_UNSIGNED_INT, nullptr);
-    glBindVertexArray(0);   
+	mesh.drawMesh();
 }
 
 void Application::setUniformsValues(const glm::mat4& modelMatrix, const glm::vec3& diffuseColor)

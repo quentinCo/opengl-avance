@@ -6,16 +6,17 @@
 
 namespace qc
 {
-template<typename T>
-using VertexBuffer = const std::shared_ptr<BufferObject<T>>&;
-typedef const std::shared_ptr<BufferObject<uint32_t>>& IndexBuffer;
 
 template<typename T>
+
 class ArrayObject
 {
 public:
+	using VertexBuffer = const std::shared_ptr<BufferObject<T>>&;
+	using IndexBuffer = const std::shared_ptr<BufferObject<uint32_t>>&;
+
 	ArrayObject() {}
-	ArrayObject(VertexBuffer<T> vbo, IndexBuffer ibo, const glmlv::GLProgram& program)
+	ArrayObject(VertexBuffer vbo, IndexBuffer ibo, const glmlv::GLProgram& program)
 	{
 		initVao(vbo, ibo, program);
 	}
@@ -31,7 +32,7 @@ public:
 private:
 	GLuint vao = 0;
 
-	void initVao(VertexBuffer<T> vbo, IndexBuffer ibo, const glmlv::GLProgram& program)
+	void initVao(VertexBuffer vbo, IndexBuffer ibo, const glmlv::GLProgram& program)
 	{
 		glGenVertexArrays(1, &vao);
 
@@ -60,7 +61,6 @@ private:
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
 	}
-
 };
 
-}
+} // namespace qc
