@@ -58,8 +58,6 @@ private:
 
     // Color
 	GLuint u_Kd;
-	glm::vec3 diffuseCubeColor = glm::vec3(1,1,1);
-    glm::vec3 diffuseSphereColor = glm::vec3(1,1,1);
 
     // Texture
     GLuint u_activeTexture;
@@ -77,8 +75,8 @@ private:
     void initUniforms();
     void initSampler();
     void initTexBuffer(GLuint* m_texObject, const std::string& nameFile);
-    void drawObject(const qc::Mesh& mesh, GLuint* m_texObject, const glm::vec3& diffuseColor);
-	void setUniformsValues(const glm::mat4& modelMatrix, const glm::vec3& diffuseColor);
+    void drawObject(const qc::Mesh& mesh, GLuint* m_texObject);
+	void setUniformsValues(const qc::Mesh& mesh);
     void bindTex(GLuint* m_texObject);
     void unBindTex();
 };

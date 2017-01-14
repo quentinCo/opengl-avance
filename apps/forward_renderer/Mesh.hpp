@@ -38,6 +38,12 @@ public:
 	void setModelMatrix(const glm::mat4& modelMatrix)
 		{this->modelMatrix = modelMatrix;}
 
+	const glm::vec3& getDiffuseColor() const
+		{return diffuseColor;}
+
+	glm::vec3& getDiffuseColor()
+		{return diffuseColor;}
+
 	void drawMesh() const;
 
 private:
@@ -46,6 +52,8 @@ private:
 	ArrayObject vao;
 
 	glm::mat4 modelMatrix = glm::mat4(1.f);
+
+	glm::vec3 diffuseColor = glm::vec3(1);
 
 	void initBuffers(const std::vector<glmlv::Vertex3f3f2f>& vertexBuffer, const std::vector<uint32_t>& indexBuffer, const glmlv::GLProgram& program);
 

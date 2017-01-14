@@ -28,9 +28,9 @@ int Application::run()
 
         // Put here rendering code
 
-        drawObject(cube, &m_texCube, diffuseCubeColor);
+        drawObject(cube, &m_texCube);
 
-        drawObject(sphere, &m_texSphere, diffuseSphereColor);
+        drawObject(sphere, &m_texSphere);
 
         // GUI
         ImGui_ImplGlfwGL3_NewFrame();
@@ -117,8 +117,8 @@ void Application::gui(float clearColor[3])
 	}
 
     // Diffuse Color
-	ImGui::ColorEdit3("Diffuse Cube Color", glm::value_ptr(diffuseCubeColor));    
-    ImGui::ColorEdit3("Diffuse Sphere Color", glm::value_ptr(diffuseSphereColor));
+	ImGui::ColorEdit3("Diffuse Cube Color", glm::value_ptr(cube.getDiffuseColor()));    
+    ImGui::ColorEdit3("Diffuse Sphere Color", glm::value_ptr(sphere.getDiffuseColor()));
 
     // Light intensity
 	ImGui::SliderFloat("Directional Light Intensity", &directionalLightIntensity, 0, 100.f);
@@ -172,15 +172,16 @@ void Application::initTexBuffer(GLuint* m_texObject, const std::string& nameFile
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void Application::drawObject(const qc::Mesh& mesh, GLuint* m_texObject, const glm::vec3& diffuseColor)
+void Application::drawObject(const qc::Mesh& mesh, GLuint* m_texObject)
 {
-	setUniformsValues(mesh.getModelMatrix(), diffuseColor);
+	setUniformsValues(mesh);
     if(activeTexture) bindTex(m_texObject);
 	mesh.drawMesh();
 }
 
-void Application::setUniformsValues(const glm::mat4& modelMatrix, const glm::vec3& diffuseColor)
+void Application::setUniformsValues(const qc::Mesh& mesh)
 {
+	const glm::mat4 modelMatrix = mesh.getModelMatrix();
     // Camera
 	glUniformMatrix4fv(u_modelViewProjMatrix, 1, GL_FALSE, glm::value_ptr(camera.computeModelViewProjMatrix(modelMatrix)));
 	glUniformMatrix4fv(u_modelViewMatrix, 1, GL_FALSE, glm::value_ptr(camera.computeModelViewMatrix(modelMatrix)));
@@ -196,7 +197,7 @@ void Application::setUniformsValues(const glm::mat4& modelMatrix, const glm::vec
 	glUniform3fv(u_pointLightIntensity, 1, glm::value_ptr(pointLightIntensityVec3));
 
     // Color
-	glUniform3fv(u_Kd, 1, glm::value_ptr(diffuseColor));
+	glUniform3fv(u_Kd, 1, glm::value_ptr(mesh.getDiffuseColor()));
 
     // "Texture"
     glUniform1i(u_activeTexture, activeTexture);
