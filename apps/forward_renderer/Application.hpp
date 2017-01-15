@@ -10,6 +10,7 @@
 
 #include "Camera.hpp"
 #include "Mesh.hpp"
+#include "Texture.hpp"
 
 class Application
 {
@@ -64,8 +65,6 @@ private:
     bool activeTexture = true;
     GLuint u_KdSampler;
 
-    GLuint m_texCube;
-    GLuint m_texSphere;
     GLuint m_sampler;
 
 
@@ -74,9 +73,8 @@ private:
 
     void initUniforms();
     void initSampler();
-    void initTexBuffer(GLuint* m_texObject, const std::string& nameFile);
-    void drawObject(const qc::Mesh& mesh, GLuint* m_texObject);
+    void drawObject(const qc::Mesh& mesh);
 	void setUniformsValues(const qc::Mesh& mesh);
-    void bindTex(GLuint* m_texObject);
+    void bindTex(const qc::Mesh& mesh);
     void unBindTex();
 };

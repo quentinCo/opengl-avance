@@ -28,9 +28,9 @@ int Application::run()
 
         // Put here rendering code
 
-        drawObject(cube, &m_texCube);
+        drawObject(cube);
 
-        drawObject(sphere, &m_texSphere);
+        drawObject(sphere);
 
         // GUI
         ImGui_ImplGlfwGL3_NewFrame();
@@ -78,11 +78,11 @@ Application::Application(int argc, char** argv):
     //Cube
 	glmlv::SimpleGeometry simpleCube = glmlv::makeCube();
 	cube = qc::Mesh(simpleCube, m_program, glm::vec3(0, 0, -5));
-	initTexBuffer(&m_texCube, "red_panda_2.jpg");
+	cube.setTexture(m_AssetsRootPath / m_AppName / "textures" / "red_panda_2.jpg");
     //Sphere
 	glmlv::SimpleGeometry simpleSphere = glmlv::makeSphere(16);
 	sphere = qc::Mesh(simpleSphere, m_program, glm::vec3(0, 2, -6));
-	initTexBuffer(&m_texSphere, "red_panda_1.jpg");
+	sphere.setTexture(m_AssetsRootPath / m_AppName / "textures" / "red_panda_1.jpg");
 
 	//DirectionalLight
 	directionalLightDir = glm::vec3(1, 1, 0);
@@ -98,8 +98,6 @@ Application::Application(int argc, char** argv):
 
 Application::~Application()
 {
-    if (m_texCube) glDeleteTextures(1, &m_texCube);
-    if (m_texSphere) glDeleteTextures(1, &m_texSphere);
     if (m_sampler) glDeleteSamplers(1, &m_sampler);
 
     ImGui_ImplGlfwGL3_Shutdown();
@@ -160,22 +158,10 @@ void Application::initSampler()
     glSamplerParameteri(m_sampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }
 
-void Application::initTexBuffer(GLuint* m_texObject, const std::string& nameFile)
-{
-    auto imageTex = glmlv::readImage(m_AssetsRootPath / m_AppName / "textures" / nameFile);
-
-    glActiveTexture(GL_TEXTURE0);
-    glGenTextures(1, m_texObject);
-    glBindTexture(GL_TEXTURE_2D, *m_texObject);
-    glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB32F, imageTex.width(), imageTex.height());
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, imageTex.width(), imageTex.height(), GL_RGBA, GL_UNSIGNED_BYTE, imageTex.data());
-    glBindTexture(GL_TEXTURE_2D, 0);
-}
-
-void Application::drawObject(const qc::Mesh& mesh, GLuint* m_texObject)
+void Application::drawObject(const qc::Mesh& mesh)
 {
 	setUniformsValues(mesh);
-    if(activeTexture) bindTex(m_texObject);
+    if(activeTexture) bindTex(mesh);
 	mesh.drawMesh();
 }
 
@@ -203,12 +189,12 @@ void Application::setUniformsValues(const qc::Mesh& mesh)
     glUniform1i(u_activeTexture, activeTexture);
 }
 
-void Application::bindTex(GLuint* m_texObject)
+void Application::bindTex(const qc::Mesh& mesh)
 {
     glActiveTexture(GL_TEXTURE0);
     glUniform1i(u_KdSampler, 0);
     glBindSampler(0, m_sampler);
-    glBindTexture(GL_TEXTURE_2D, *m_texObject);
+    glBindTexture(GL_TEXTURE_2D, mesh.getTexture()->getTexPointer());
 }
 
 void Application::unBindTex()
