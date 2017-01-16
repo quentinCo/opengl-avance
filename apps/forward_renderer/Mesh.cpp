@@ -17,7 +17,7 @@ Mesh::Mesh(const glmlv::SimpleGeometry& geometry, const glmlv::GLProgram& progra
 	modelMatrix = glm::translate(modelMatrix, position);
 	initBuffers(geometry.vertexBuffer, geometry.indexBuffer, program);
 
-	if(pathFile != "") texture = std::make_shared<Texture>(pathFile);
+	if(pathFile != "") diffuseTexture = std::make_shared<Texture>(pathFile);
 
 }
 

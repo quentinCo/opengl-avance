@@ -1,5 +1,3 @@
-#define TINYOBJLOADER_IMPLEMENTATION
-
 #include "Application.hpp"
 
 // classics
@@ -17,9 +15,6 @@
 
 // glmlv
 #include <glmlv/imgui_impl_glfw_gl3.hpp>
-#include <glmlv/Image2DRGBA.hpp>
-
-#include <tiny_obj_loader.h>
 
 int Application::run()
 {
@@ -91,8 +86,8 @@ Application::Application(int argc, char** argv):
 	scene.addPointLight(qc::Light(glm::vec3(0, 0, 5), 50));
 
 	// Add obj
-	std::experimental::filesystem::path dir = (m_AssetsRootPath / m_AppName / "obj" / "Lilith");
-	std::string fileName = "Lilith.obj";
+	std::experimental::filesystem::path dir = (m_AssetsRootPath / m_AppName / "obj" / "Maya");
+	std::string fileName = "maya.obj";
 	scene.addMeshFromObjFile(dir, fileName, m_program);
 
     //Sampler
@@ -210,7 +205,7 @@ void Application::setUniformsMeshValues(const qc::Mesh& mesh)
 	glUniform3fv(u_Kd, 1, glm::value_ptr(mesh.getDiffuseColor()));
 
 	// "Texture"
-	bool textureOrNot = (activeTexture && mesh.getTexture());
+	bool textureOrNot = (activeTexture && mesh.getDiffuseTexture());
 	glUniform1i(u_activeTexture, textureOrNot);
 }
 
@@ -230,12 +225,12 @@ void Application::setUniformsLightPointLight(const qc::Light& pointLight)
 
 void Application::bindTex(const qc::Mesh& mesh)
 {
-	if (mesh.getTexture())
+	if (mesh.getDiffuseTexture())
 	{
 		glActiveTexture(GL_TEXTURE0);
 		glUniform1i(u_KdSampler, 0);
 		glBindSampler(0, m_sampler);
-		glBindTexture(GL_TEXTURE_2D, mesh.getTexture()->getTexPointer());
+		glBindTexture(GL_TEXTURE_2D, mesh.getDiffuseTexture()->getTexPointer());
 	}
 }
 

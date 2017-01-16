@@ -50,11 +50,11 @@ public:
 	void setDiffuseColor(const glm::vec3& color)
 		{diffuseColor = color;}
 
-	const std::shared_ptr<Texture> getTexture() const
-		{return texture;}
+	const std::shared_ptr<Texture> getDiffuseTexture() const
+		{return diffuseTexture;}
 
-	void setTexture(PathFile pathFile)
-		{texture = std::make_shared<Texture>(pathFile);}
+	void setDiffuseTexture(PathFile pathFile)
+		{diffuseTexture = std::make_shared<Texture>(pathFile);}
 
 	void drawMesh() const;
 
@@ -67,7 +67,7 @@ private:
 
 	glm::vec3 diffuseColor = glm::vec3(1);
 
-	std::shared_ptr<Texture> texture;
+	std::shared_ptr<Texture> diffuseTexture;
 
 	void initBuffers(const std::vector<glmlv::Vertex3f3f2f>& vertexBuffer, const std::vector<uint32_t>& indexBuffer, const glmlv::GLProgram& program);
 
