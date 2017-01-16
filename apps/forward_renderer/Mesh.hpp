@@ -29,7 +29,8 @@ public:
 	using PathFile = const std::experimental::filesystem::path&;
 
 	Mesh() {};
-	Mesh(const glmlv::SimpleGeometry& geometry, const glmlv::GLProgram& program, const glm::vec3& position = glm::vec3(0));
+	Mesh(const std::vector<glmlv::Vertex3f3f2f>& vbo, const std::vector<uint32_t>& ibo, const glmlv::GLProgram& program);
+	Mesh(const glmlv::SimpleGeometry& geometry, const glmlv::GLProgram& program, const glm::vec3& position = glm::vec3(0), const PathFile& pathFile = "");
 
 	glm::mat4 getModelMatrix()
 		{return modelMatrix;}
@@ -45,6 +46,9 @@ public:
 
 	glm::vec3& getDiffuseColor()
 		{return diffuseColor;}
+
+	void setDiffuseColor(const glm::vec3& color)
+		{diffuseColor = color;}
 
 	const std::shared_ptr<Texture> getTexture() const
 		{return texture;}

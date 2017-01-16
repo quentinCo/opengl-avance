@@ -9,8 +9,7 @@
 #include <glmlv/simple_geometry.hpp>
 
 #include "Camera.hpp"
-#include "Mesh.hpp"
-#include "Texture.hpp"
+#include "Scene.hpp"
 
 class Application
 {
@@ -33,8 +32,7 @@ private:
     const glmlv::fs::path m_AssetsRootPath;
 
 	// Objects with their buffers
-	qc::Mesh cube;
-	qc::Mesh sphere;
+	qc::Scene scene;
 
 	// Shader program
     glmlv::GLProgram m_program;
@@ -49,13 +47,9 @@ private:
 	// Lights
 	GLuint u_directionalLightDir = 0;
 	GLuint u_directionalLightIntensity = 0;
-	glm::vec3 directionalLightDir;
-	float directionalLightIntensity;
 
 	GLuint u_pointLightPosition = 0;
 	GLuint u_pointLightIntensity = 0;
-	glm::vec3 pointLightPosition;
-	float pointLightIntensity;
 
     // Color
 	GLuint u_Kd;
@@ -73,8 +67,12 @@ private:
 
     void initUniforms();
     void initSampler();
-    void drawObject(const qc::Mesh& mesh);
-	void setUniformsValues(const qc::Mesh& mesh);
-    void bindTex(const qc::Mesh& mesh);
+    void drawScene();
+	void setUniformsMeshValues(const qc::Mesh& mesh);
+	void setUniformsLightDirValue(const qc::Light& dirLight);
+	void setUniformsLightPointLight(const qc::Light& pointLight);
+	void bindTex(const qc::Mesh& mesh);
     void unBindTex();
+
+	void tinyTest();
 };

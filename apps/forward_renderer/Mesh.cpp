@@ -4,10 +4,21 @@
 
 using namespace qc;
 
-Mesh::Mesh(const glmlv::SimpleGeometry& geometry, const glmlv::GLProgram& program, const glm::vec3& position)
+Mesh::Mesh(const std::vector<glmlv::Vertex3f3f2f>& vbo, const std::vector<uint32_t>& ibo, const glmlv::GLProgram& program)
+{
+	modelMatrix = glm::translate(modelMatrix, glm::vec3(0));
+	initBuffers(vbo, ibo, program);
+
+	//if (pathFile != "") texture = std::make_shared<Texture>(pathFile);
+}
+
+Mesh::Mesh(const glmlv::SimpleGeometry& geometry, const glmlv::GLProgram& program, const glm::vec3& position, const PathFile& pathFile)
 {
 	modelMatrix = glm::translate(modelMatrix, position);
 	initBuffers(geometry.vertexBuffer, geometry.indexBuffer, program);
+
+	if(pathFile != "") texture = std::make_shared<Texture>(pathFile);
+
 }
 
 void Mesh::drawMesh() const
