@@ -6,7 +6,7 @@ using namespace qc;
 
 void Scene::addMeshFromObjFile(const PathFile directory, const std::string& nameFile, const glmlv::GLProgram& program)
 {
-	std::string inputfile = (directory / "cornell_box.obj").string();
+	std::string inputfile = (directory / nameFile).string();
 	std::string dirObj = directory.string() + "\\";
 	tinyobj::attrib_t attrib;
 	std::vector<tinyobj::shape_t> shapes;
