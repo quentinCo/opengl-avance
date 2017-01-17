@@ -44,7 +44,7 @@ public:
 	void addMesh(const Mesh& mesh)
 		{meshes.push_back(mesh);}
 
-	void addMeshFromObjFile(const PathFile directory, const std::string& nameFile, const glmlv::GLProgram& program);
+	void addMeshFromObjFile(const PathFile directory, const std::string& nameFile, const glmlv::GLProgram& program, const glm::vec3& position = glm::vec3(0));
 
 private:
 	std::vector<Mesh> meshes;

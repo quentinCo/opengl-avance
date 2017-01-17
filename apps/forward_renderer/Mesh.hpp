@@ -29,7 +29,7 @@ public:
 	using PathFile = const std::experimental::filesystem::path&;
 
 	Mesh() {};
-	Mesh(const std::vector<glmlv::Vertex3f3f2f>& vbo, const std::vector<uint32_t>& ibo, const glmlv::GLProgram& program);
+	Mesh(const std::vector<glmlv::Vertex3f3f2f>& vbo, const std::vector<uint32_t>& ibo, const glmlv::GLProgram& program, const glm::vec3& position = glm::vec3(0));
 	Mesh(const glmlv::SimpleGeometry& geometry, const glmlv::GLProgram& program, const glm::vec3& position = glm::vec3(0), const PathFile& pathFile = "");
 
 	glm::mat4 getModelMatrix()
@@ -56,6 +56,12 @@ public:
 	void setDiffuseTexture(PathFile pathFile)
 		{diffuseTexture = std::make_shared<Texture>(pathFile);}
 
+	const std::shared_ptr<Texture> getNormalTexture() const
+		{return normalTexture;}
+
+	void setNormalTexture(PathFile pathFile)
+		{normalTexture = std::make_shared<Texture>(pathFile);}
+
 	void drawMesh() const;
 
 private:
@@ -68,6 +74,7 @@ private:
 	glm::vec3 diffuseColor = glm::vec3(1);
 
 	std::shared_ptr<Texture> diffuseTexture;
+	std::shared_ptr<Texture> normalTexture;
 
 	void initBuffers(const std::vector<glmlv::Vertex3f3f2f>& vertexBuffer, const std::vector<uint32_t>& indexBuffer, const glmlv::GLProgram& program);
 

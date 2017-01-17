@@ -4,9 +4,9 @@
 
 using namespace qc;
 
-Mesh::Mesh(const std::vector<glmlv::Vertex3f3f2f>& vbo, const std::vector<uint32_t>& ibo, const glmlv::GLProgram& program)
+Mesh::Mesh(const std::vector<glmlv::Vertex3f3f2f>& vbo, const std::vector<uint32_t>& ibo, const glmlv::GLProgram& program, const glm::vec3& position)
 {
-	modelMatrix = glm::translate(modelMatrix, glm::vec3(0));
+	modelMatrix = glm::translate(modelMatrix, position);
 	initBuffers(vbo, ibo, program);
 
 	//if (pathFile != "") texture = std::make_shared<Texture>(pathFile);
@@ -24,7 +24,7 @@ Mesh::Mesh(const glmlv::SimpleGeometry& geometry, const glmlv::GLProgram& progra
 void Mesh::drawMesh() const
 {
 	glBindVertexArray(vao->getArrayPointer());
-	glDrawElements(GL_TRIANGLES, ibo->getSizeBuffer(), GL_UNSIGNED_INT, nullptr);
+	glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(ibo->getSizeBuffer()), GL_UNSIGNED_INT, nullptr);
 	glBindVertexArray(0);
 }
 

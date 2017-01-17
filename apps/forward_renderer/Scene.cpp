@@ -6,7 +6,7 @@
 
 using namespace qc;
 
-void Scene::addMeshFromObjFile(const PathFile directory, const std::string& nameFile, const glmlv::GLProgram& program)
+void Scene::addMeshFromObjFile(const PathFile directory, const std::string& nameFile, const glmlv::GLProgram& program, const glm::vec3& position)
 {
 	std::string inputfile = (directory / nameFile).string();
 	std::string dirObj = directory.string() + "\\";
@@ -61,21 +61,17 @@ void Scene::addMeshFromObjFile(const PathFile directory, const std::string& name
 				glm::vec3 position = (attrib.vertices.size() > 0) ? glm::vec3(attrib.vertices[3 * idx.vertex_index + 0], attrib.vertices[3 * idx.vertex_index + 1], attrib.vertices[3 * idx.vertex_index + 2]) : glm::vec3(0);
 				glm::vec3 normal = (attrib.normals.size() > 0) ? glm::vec3(attrib.normals[3 * idx.normal_index + 0], attrib.normals[3 * idx.normal_index + 1], attrib.normals[3 * idx.normal_index + 2]) : glm::vec3(1);
 				glm::vec2 texCoord = (attrib.texcoords.size() > 0) ? glm::vec2(attrib.texcoords[2 * idx.texcoord_index + 0], attrib.texcoords[2 * idx.texcoord_index + 1]) : glm::vec2(0);
-				// BON POINT MAIS PAS BONNE VALEUR
-				size_t iboIndex;
+
+				uint32_t iboIndex;
 				if(featureForIndex == "vertex")
-					iboIndex = idx.vertex_index - miMaxIndex.first;
+					iboIndex = static_cast<uint32_t>(idx.vertex_index - miMaxIndex.first);
 				else if(featureForIndex == "normal")
-					iboIndex = idx.normal_index - miMaxIndex.first;
+					iboIndex = static_cast<uint32_t>(idx.normal_index - miMaxIndex.first);
 				else if(featureForIndex == "tex")
-					iboIndex = idx.texcoord_index - miMaxIndex.first;
+					iboIndex = static_cast<uint32_t>(idx.texcoord_index - miMaxIndex.first);
 
 				vbo[iboIndex] = glmlv::Vertex3f3f2f(position, normal, texCoord);
-				//std::cout << "Vertex " << iboIndex << " : " << idx.vertex_index << " - " << idx.normal_index << " - " << idx.texcoord_index << std::endl;
-				/*std::cout << "\t" << vbo[iboIndex].position.x << "; " << vbo[iboIndex].position.y << "; " << vbo[iboIndex].position.z << std::endl;
-				std::cout << "\t" << vbo[iboIndex].normal.x << "; " << vbo[iboIndex].normal.y << "; " << vbo[iboIndex].normal.z << std::endl;
-				std::cout << "\t" << vbo[iboIndex].texCoords.x << "; " << vbo[iboIndex].texCoords.y << std::endl;
-				*/ibo.push_back(iboIndex);
+				ibo.push_back(iboIndex);
 			}
 			index_offset += fv;
 
@@ -83,15 +79,18 @@ void Scene::addMeshFromObjFile(const PathFile directory, const std::string& name
 			materialIndex = shapes[s].mesh.material_ids[f];
 		}
 
-		Mesh mesh = Mesh(vbo, ibo, program);
+		Mesh mesh = Mesh(vbo, ibo, program, position);
 		if (materials[materialIndex].diffuse_texname != "")
 		{
 			PathFile diffusePath = (directory / materials[materialIndex].diffuse_texname);
-			/*std::cout << "Mesh : " << shapes[s].name << std::endl;
-			std::cout << "\tTexture : " << materials[materialIndex].diffuse_texname << std::endl;
-			std::cout << "\tPath : " << diffusePath.string() << std::endl;*/
 			mesh.setDiffuseTexture(diffusePath);
 		}
+		if (materials[materialIndex].normal_texname != "")
+		{
+			PathFile normalPath = (directory / materials[materialIndex].normal_texname);
+			mesh.setDiffuseTexture(normalPath);
+		}
+
 		glm::vec3 diffuseColor = glm::vec3(materials[materialIndex].diffuse[0], materials[materialIndex].diffuse[1], materials[materialIndex].diffuse[2]);
 		if (diffuseColor == glm::vec3(0))
 			diffuseColor = glm::vec3(1);

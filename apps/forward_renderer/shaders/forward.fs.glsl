@@ -58,13 +58,14 @@ void main()
 		vec3 textureColor = vec3(1);
 		if(uActiveTexture)
 		{
-			textureColor = texture(uKdSampler, vTexCoords).xyz;
+			// Coorection 1-vTexCoords.y
+			textureColor = texture(uKdSampler, vec2(vTexCoords.x, 1-vTexCoords.y)).xyz;
 		}
 
-		//fColor = uKd * textureColor * lightIntensityToPoint;
+		fColor = uKd * textureColor * lightIntensityToPoint;
 		//fColor = vec3(vTexCoords,0);
 		//fColor = uKd * lightIntensityToPoint;
-		fColor = textureColor;
+		//fColor = textureColor;
 		//fColor = vec3(vTexCoords, 0);
 		//fColor = vViewSpaceNormal;
 	}

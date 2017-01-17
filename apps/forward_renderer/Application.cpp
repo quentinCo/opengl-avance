@@ -89,9 +89,13 @@ Application::Application(int argc, char** argv):
 	scene.addPointLight(qc::Light(glm::vec3(0, 0, 5), 50));
 
 	// Add obj
-	std::experimental::filesystem::path dir = (m_AssetsRootPath / m_AppName / "obj" / "Cube");
-	std::string fileName = "cube.obj";
-	scene.addMeshFromObjFile(dir, fileName, m_program);
+	std::experimental::filesystem::path dir = (m_AssetsRootPath / m_AppName / "obj" / "Maya");
+	std::string fileName = "maya.obj";
+	scene.addMeshFromObjFile(dir, fileName, m_program, glm::vec3(1, 0, -2));
+
+	dir = (m_AssetsRootPath / m_AppName / "obj" / "Cube");
+	fileName = "cube.obj";
+	scene.addMeshFromObjFile(dir, fileName, m_program, glm::vec3(3, 0, -3));
 
     //Sampler
     initSampler();
