@@ -59,7 +59,7 @@ void main()
 		if(uActiveTexture)
 		{
 			// Coorection 1-vTexCoords.y
-			textureColor = texture(uKdSampler, vec2(vTexCoords.x, 1-vTexCoords.y)).xyz;
+			textureColor = texture(uKdSampler, vTexCoords).xyz;
 		}
 
 		fColor = uKd * textureColor * lightIntensityToPoint;

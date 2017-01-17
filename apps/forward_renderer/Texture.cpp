@@ -8,6 +8,7 @@ using namespace qc;
 void Texture::initTexBuffer(PathFile pathFile)
 {
 	auto imageTex = glmlv::readImage(pathFile);
+	imageTex.flipY();
 
 	glActiveTexture(GL_TEXTURE0);
 	glGenTextures(1, &texPointer);
