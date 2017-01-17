@@ -27,7 +27,10 @@ int Application::run()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Put here rendering code
+		if(wireFrame) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		drawScene();
+
+		if(wireFrame) glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
         // GUI
         ImGui_ImplGlfwGL3_NewFrame();
@@ -86,8 +89,8 @@ Application::Application(int argc, char** argv):
 	scene.addPointLight(qc::Light(glm::vec3(0, 0, 5), 50));
 
 	// Add obj
-	std::experimental::filesystem::path dir = (m_AssetsRootPath / m_AppName / "obj" / "Maya");
-	std::string fileName = "maya.obj";
+	std::experimental::filesystem::path dir = (m_AssetsRootPath / m_AppName / "obj" / "Cube");
+	std::string fileName = "cube.obj";
 	scene.addMeshFromObjFile(dir, fileName, m_program);
 
     //Sampler
@@ -145,6 +148,14 @@ void Application::gui(float clearColor[3])
         activeTexture = !activeTexture;
         unBindTex(); // TO MOVE
     }
+	ImGui::SameLine();
+	std::string activeWireFrame = wireFrame ? "Fill" : "WireFrame";
+	if (ImGui::Button(activeWireFrame.c_str()))
+	{
+		wireFrame = !wireFrame;
+		activeTexture = !wireFrame;
+		unBindTex(); // TO MOVE
+	}
 
 	ImGui::End();
 }
@@ -164,6 +175,7 @@ void Application::initUniforms()
 	u_Kd = glGetUniformLocation(m_program.glId(), "uKd");
 
     u_activeTexture = glGetUniformLocation(m_program.glId(), "uActiveTexture");
+	u_wireframe = glGetUniformLocation(m_program.glId(), "uWireframe");
     u_KdSampler = glGetUniformLocation(m_program.glId(), "uKdSampler");
 }
 
@@ -207,6 +219,9 @@ void Application::setUniformsMeshValues(const qc::Mesh& mesh)
 	// "Texture"
 	bool textureOrNot = (activeTexture && mesh.getDiffuseTexture());
 	glUniform1i(u_activeTexture, textureOrNot);
+
+	// WireFrame
+	glUniform1i(u_wireframe, wireFrame);
 }
 
 void Application::setUniformsLightDirValue(const qc::Light& dirLight)

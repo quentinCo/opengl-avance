@@ -23,9 +23,10 @@ uniform vec3 uKd;
 uniform bool uActiveTexture;
 uniform sampler2D uKdSampler;
 
+uniform bool uWireframe;
+
 
 out vec3 fColor;
-
 
 vec3 computeLightIntensityToPoint()
 {
@@ -46,18 +47,25 @@ vec3 computeLightIntensityToPoint()
 
 void main()
 {
-	vec3 lightIntensityToPoint = computeLightIntensityToPoint();
-
-	vec3 textureColor = vec3(1);
-	if(uActiveTexture)
+	if(uWireframe)
 	{
-		textureColor = texture(uKdSampler, vTexCoords).xyz;
+		fColor = vec3(1);
 	}
+	else
+	{
+		vec3 lightIntensityToPoint = computeLightIntensityToPoint();
 
-	fColor = uKd * textureColor * lightIntensityToPoint;
-	
-	//fColor = uKd * lightIntensityToPoint;
-	//fColor = textureColor;
-	//fColor = vec3(vTexCoords, 0);
-	//fColor = vViewSpaceNormal;
+		vec3 textureColor = vec3(1);
+		if(uActiveTexture)
+		{
+			textureColor = texture(uKdSampler, vTexCoords).xyz;
+		}
+
+		//fColor = uKd * textureColor * lightIntensityToPoint;
+		//fColor = vec3(vTexCoords,0);
+		//fColor = uKd * lightIntensityToPoint;
+		fColor = textureColor;
+		//fColor = vec3(vTexCoords, 0);
+		//fColor = vViewSpaceNormal;
+	}
 }

@@ -61,6 +61,8 @@ private:
 
     GLuint m_sampler;
 
+	GLuint u_wireframe;
+	bool wireFrame = false;
 
 	// Functions
 	void gui(float clearColor[3]);
@@ -73,6 +75,4 @@ private:
 	void setUniformsLightPointLight(const qc::Light& pointLight);
 	void bindTex(const qc::Mesh& mesh);
     void unBindTex();
-
-	void tinyTest();
 };
