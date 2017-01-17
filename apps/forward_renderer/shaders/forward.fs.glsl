@@ -5,6 +5,8 @@ in vec3 vViewSpaceNormal;
 //in vec3 vTexCoords;
 in vec2 vTexCoords;
 
+uniform mat4 uModelViewMatrix;
+
 //  Light
 //   Directional
 uniform vec3 uDirectionalLightDir;
@@ -21,19 +23,22 @@ uniform vec3 uKd;
 uniform bool uActiveTexture;
 uniform sampler2D uKdSampler;
 
+uniform bool uWireframe;
+
 
 out vec3 fColor;
 
-
 vec3 computeLightIntensityToPoint()
 {
-	//  Pointlight transitional varibles
-	float distToPointLight = length(uPointLightPosition - vViewSpacePosition);
-	vec3 dirToPointLight = (uPointLightPosition - vViewSpacePosition) / distToPointLight;
+	//  Pointlight transitional variables
+	vec3 pointLightMV = (uModelViewMatrix * vec4(uPointLightPosition,1)).xyz;
+	float distToPointLight = length(pointLightMV - vViewSpacePosition);
+	vec3 dirToPointLight = (pointLightMV - vViewSpacePosition) / distToPointLight;
 	vec3 pointLightIntensityToPoint = uPointLightIntensity * max(0.0, dot(vViewSpaceNormal, dirToPointLight));
 
-	//  DirectionalLight transitional varibles
-	vec3 directionalLightIntensityToPoint = uDirectionalLightIntensity * max(0.0, dot(vViewSpaceNormal, uDirectionalLightDir));
+	//  DirectionalLight transitional variables
+	vec3 dirLightMV = (uModelViewMatrix * vec4(uDirectionalLightDir, 0)).xyz;
+	vec3 directionalLightIntensityToPoint = uDirectionalLightIntensity * max(0.0, dot(vViewSpaceNormal, dirLightMV));
 
 	vec3 lightIntensityToPoint = (pointLightIntensityToPoint + directionalLightIntensityToPoint) / (distToPointLight * distToPointLight);
 
@@ -42,18 +47,26 @@ vec3 computeLightIntensityToPoint()
 
 void main()
 {
-	vec3 lightIntensityToPoint = computeLightIntensityToPoint();
-
-	vec3 textureColor = vec3(1);
-	if(uActiveTexture)
+	if(uWireframe)
 	{
-		textureColor = texture(uKdSampler, vTexCoords).xyz;
+		fColor = vec3(1);
 	}
+	else
+	{
+		vec3 lightIntensityToPoint = computeLightIntensityToPoint();
 
-	fColor = uKd * textureColor * lightIntensityToPoint;
-	
-	//fColor = uKd * lightIntensityToPoint;
-	//fColor = textureColor;
-	//fColor = vec3(vTexCoords, 0);
-	//fColor = vViewSpaceNormal;
+		vec3 textureColor = vec3(1);
+		if(uActiveTexture)
+		{
+			// Coorection 1-vTexCoords.y
+			textureColor = texture(uKdSampler, vTexCoords).xyz;
+		}
+
+		fColor = uKd * textureColor * lightIntensityToPoint;
+		//fColor = vec3(vTexCoords,0);
+		//fColor = uKd * lightIntensityToPoint;
+		//fColor = textureColor;
+		//fColor = vec3(vTexCoords, 0);
+		//fColor = vViewSpaceNormal;
+	}
 }
