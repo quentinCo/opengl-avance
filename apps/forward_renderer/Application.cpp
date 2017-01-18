@@ -9,6 +9,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/io.hpp>
+#include <glmlv/filesystem.hpp>
 
 // imgui
 #include <imgui.h>
@@ -89,7 +90,7 @@ Application::Application(int argc, char** argv):
 	scene.addPointLight(qc::Light(glm::vec3(0, 0, 5), 50));
 
 	// Add obj
-	std::experimental::filesystem::path dir = (m_AssetsRootPath / m_AppName / "obj" / "Maya");
+	glmlv::fs::path dir = (m_AssetsRootPath / m_AppName / "obj" / "Maya");
 	std::string fileName = "maya.obj";
 	scene.addMeshFromObjFile(dir, fileName, m_program, glm::vec3(1, 0, -2));
 

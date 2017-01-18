@@ -1,5 +1,7 @@
 #pragma once
+//#include <experimental/filesystem>
 
+#include <glmlv/filesystem.hpp>
 #include <glmlv/GLProgram.hpp>
 
 namespace qc
@@ -8,7 +10,7 @@ namespace qc
 class Texture
 {
 public:
-	using PathFile = const std::experimental::filesystem::path&;
+	using PathFile = const glmlv::fs::path&;
 	Texture() {}
 	Texture(PathFile pathFile)
 		{initTexBuffer(pathFile);};

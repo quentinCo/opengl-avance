@@ -26,7 +26,7 @@ public:
 	using VertexBuffer = std::shared_ptr<qc::BufferObject<glmlv::Vertex3f3f2f>>;
 	using IndexBuffer = std::shared_ptr<qc::BufferObject<uint32_t>>;
 	using ArrayObject = std::shared_ptr<qc::ArrayObject<glmlv::Vertex3f3f2f>>;
-	using PathFile = const std::experimental::filesystem::path&;
+	using PathFile = const glmlv::fs::path&;
 
 	Mesh() {};
 	Mesh(const std::vector<glmlv::Vertex3f3f2f>& vbo, const std::vector<uint32_t>& ibo, const glmlv::GLProgram& program, const glm::vec3& position = glm::vec3(0));

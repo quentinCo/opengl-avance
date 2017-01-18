@@ -4,6 +4,8 @@
 
 #include <vector>
 
+#include <glmlv/filesystem.hpp>
+
 #include "Mesh.hpp"
 #include "Light.hpp"
 
@@ -13,7 +15,7 @@ namespace qc
 class Scene
 {
 public:
-	using PathFile = std::experimental::filesystem::path&;
+	using PathFile = glmlv::fs::path;
 
 	Scene() {};
 
@@ -44,7 +46,7 @@ public:
 	void addMesh(const Mesh& mesh)
 		{meshes.push_back(mesh);}
 
-	void addMeshFromObjFile(const PathFile directory, const std::string& nameFile, const glmlv::GLProgram& program, const glm::vec3& position = glm::vec3(0));
+	void addMeshFromObjFile(const PathFile& directory, const std::string& nameFile, const glmlv::GLProgram& program, const glm::vec3& position = glm::vec3(0));
 
 private:
 	std::vector<Mesh> meshes;

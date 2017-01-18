@@ -6,10 +6,10 @@
 
 using namespace qc;
 
-void Scene::addMeshFromObjFile(const PathFile directory, const std::string& nameFile, const glmlv::GLProgram& program, const glm::vec3& position)
+void Scene::addMeshFromObjFile(const PathFile& directory, const std::string& nameFile, const glmlv::GLProgram& program, const glm::vec3& position)
 {
 	std::string inputfile = (directory / nameFile).string();
-	std::string dirObj = directory.string() + "\\";
+	std::string dirObj = directory.string() + "/";
 	tinyobj::attrib_t attrib;
 	std::vector<tinyobj::shape_t> shapes;
 	std::vector<tinyobj::material_t> materials;
