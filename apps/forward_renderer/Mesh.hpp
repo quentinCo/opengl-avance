@@ -23,14 +23,23 @@ namespace qc
 class Mesh
 {
 public:
-	using VertexBuffer = std::shared_ptr<qc::BufferObject<glmlv::Vertex3f3f2f>>;
-	using IndexBuffer = std::shared_ptr<qc::BufferObject<uint32_t>>;
-	using ArrayObject = std::shared_ptr<qc::ArrayObject<glmlv::Vertex3f3f2f>>;
+	using VertexBuffer = qc::BufferObject<glmlv::Vertex3f3f2f>;
+	using IndexBuffer = qc::BufferObject<uint32_t>;
+	using ArrayObject = qc::ArrayObject<glmlv::Vertex3f3f2f>;
 	using PathFile = const glmlv::fs::path&;
 
 	Mesh() {};
 	Mesh(const std::vector<glmlv::Vertex3f3f2f>& vbo, const std::vector<uint32_t>& ibo, const glmlv::GLProgram& program, const glm::vec3& position = glm::vec3(0));
 	Mesh(const glmlv::SimpleGeometry& geometry, const glmlv::GLProgram& program, const glm::vec3& position = glm::vec3(0), const PathFile& pathFile = "");
+/*
+	Mesh(const Mesh&o )	
+	Mesh& operator= (const Mesh& o)
+	{
+
+	};
+*/
+	Mesh(Mesh&& o) = default;
+	Mesh& operator = (Mesh&& o) = default;
 
 	glm::mat4 getModelMatrix()
 		{return modelMatrix;}
@@ -50,17 +59,17 @@ public:
 	void setDiffuseColor(const glm::vec3& color)
 		{diffuseColor = color;}
 
-	const std::shared_ptr<Texture> getDiffuseTexture() const
+	const Texture& getDiffuseTexture() const
 		{return diffuseTexture;}
 
 	void setDiffuseTexture(PathFile pathFile)
-		{diffuseTexture = std::make_shared<Texture>(pathFile);}
+		{diffuseTexture = Texture(pathFile);}
 
-	const std::shared_ptr<Texture> getNormalTexture() const
+	const Texture& getNormalTexture() const
 		{return normalTexture;}
 
 	void setNormalTexture(PathFile pathFile)
-		{normalTexture = std::make_shared<Texture>(pathFile);}
+		{normalTexture = Texture(pathFile);}
 
 	void drawMesh() const;
 
@@ -73,8 +82,8 @@ private:
 
 	glm::vec3 diffuseColor = glm::vec3(1);
 
-	std::shared_ptr<Texture> diffuseTexture;
-	std::shared_ptr<Texture> normalTexture;
+	Texture diffuseTexture;
+	Texture normalTexture;
 
 	void initBuffers(const std::vector<glmlv::Vertex3f3f2f>& vertexBuffer, const std::vector<uint32_t>& indexBuffer, const glmlv::GLProgram& program);
 

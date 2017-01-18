@@ -24,6 +24,25 @@ public:
 		if (bufferPointer) glDeleteBuffers(1, &bufferPointer);
 	}
 
+	BufferObject(const BufferObject<T>&) = delete;
+	BufferObject<T>& operator= (const BufferObject<T>&) = delete;
+
+	BufferObject(BufferObject&& o)
+		: bufferPointer(o.bufferPointer), target(o.target), bufferSize(o.bufferSize)
+	{
+		o.bufferPointer = 0;
+	}
+
+	BufferObject<T>& operator= (BufferObject<T>&& o)
+	{
+		bufferPointer = o.bufferPointer;
+		target = o.target;
+		bufferSize = o.bufferSize;
+		o.bufferPointer = 0;
+
+		return *this;
+	}
+
 	GLuint getBufferPointer() const
 		{return bufferPointer;}
 

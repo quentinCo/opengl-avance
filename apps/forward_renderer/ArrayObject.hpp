@@ -12,8 +12,8 @@ template<typename T>
 class ArrayObject
 {
 public:
-	using VertexBuffer = const std::shared_ptr<BufferObject<T>>&;
-	using IndexBuffer = const std::shared_ptr<BufferObject<uint32_t>>&;
+	using VertexBuffer = const BufferObject<T>&;
+	using IndexBuffer = const BufferObject<uint32_t>&;
 
 	ArrayObject() {}
 	ArrayObject(VertexBuffer vbo, IndexBuffer ibo, const glmlv::GLProgram& program)
@@ -24,6 +24,23 @@ public:
 	~ArrayObject()
 	{
 		if (vao) glDeleteBuffers(1, &vao);
+	}
+
+	ArrayObject(const ArrayObject&) = delete;
+	ArrayObject& operator =(const ArrayObject&) = delete;
+
+	ArrayObject(ArrayObject&& o)
+		: vao(o.vao)
+	{
+		o.vao = 0;
+	}
+
+	ArrayObject& operator = (ArrayObject&& o)
+	{
+		vao = o.vao;
+		o.vao = 0;
+
+		return *this;
 	}
 
 	GLuint getArrayPointer() const
@@ -41,7 +58,7 @@ private:
 		const GLint textAttrLocation = glGetAttribLocation(program.glId(), "aTexCoords");
 
 		glBindVertexArray(vao);
-		glBindBuffer(GL_ARRAY_BUFFER, vbo->getBufferPointer());
+		glBindBuffer(GL_ARRAY_BUFFER, vbo.getBufferPointer());
 		glEnableVertexAttribArray(positionAttrLocation);
 		glVertexAttribPointer(positionAttrLocation, 3, GL_FLOAT, GL_FALSE, sizeof(T), (const GLvoid*)offsetof(T, position));
 
@@ -57,7 +74,7 @@ private:
 			glVertexAttribPointer(textAttrLocation, 2, GL_FLOAT, GL_FALSE, sizeof(T), (const GLvoid*)offsetof(T, texCoords));
 		}
 
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo->getBufferPointer());
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo.getBufferPointer());
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
 	}

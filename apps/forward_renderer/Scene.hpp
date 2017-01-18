@@ -1,6 +1,6 @@
 #pragma once
 
-#include <tiny_obj_loader.h>
+//#include <tiny_obj_loader.h>
 
 #include <vector>
 
@@ -54,7 +54,7 @@ private:
 	std::vector<Light> pointLights;
 
 	// For the cube problem nb vertex != nb normal != nb texCoord
-	std::pair<size_t,size_t> findMinMaxIndex(const std::vector<tinyobj::index_t>& indices, std::string& res);
+	//std::pair<size_t,size_t> findMinMaxIndex(const std::vector<tinyobj::index_t>& indices, std::string& res);
 
 };
 

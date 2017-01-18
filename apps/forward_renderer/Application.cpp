@@ -94,9 +94,9 @@ Application::Application(int argc, char** argv):
 	std::string fileName = "maya.obj";
 	scene.addMeshFromObjFile(dir, fileName, m_program, glm::vec3(1, 0, -2));
 
-	dir = (m_AssetsRootPath / m_AppName / "obj" / "Cube");
+	/*dir = (m_AssetsRootPath / m_AppName / "obj" / "Cube");
 	fileName = "cube.obj";
-	scene.addMeshFromObjFile(dir, fileName, m_program, glm::vec3(3, 0, -3));
+	scene.addMeshFromObjFile(dir, fileName, m_program, glm::vec3(3, 0, -3));*/
 
     //Sampler
     initSampler();
@@ -222,8 +222,7 @@ void Application::setUniformsMeshValues(const qc::Mesh& mesh)
 	glUniform3fv(u_Kd, 1, glm::value_ptr(mesh.getDiffuseColor()));
 
 	// "Texture"
-	bool textureOrNot = (activeTexture && mesh.getDiffuseTexture());
-	glUniform1i(u_activeTexture, textureOrNot);
+	glUniform1i(u_activeTexture, activeTexture);
 
 	// WireFrame
 	glUniform1i(u_wireframe, wireFrame);
@@ -245,13 +244,10 @@ void Application::setUniformsLightPointLight(const qc::Light& pointLight)
 
 void Application::bindTex(const qc::Mesh& mesh)
 {
-	if (mesh.getDiffuseTexture())
-	{
-		glActiveTexture(GL_TEXTURE0);
-		glUniform1i(u_KdSampler, 0);
-		glBindSampler(0, m_sampler);
-		glBindTexture(GL_TEXTURE_2D, mesh.getDiffuseTexture()->getTexPointer());
-	}
+	glActiveTexture(GL_TEXTURE0);
+	glUniform1i(u_KdSampler, 0);
+	glBindSampler(0, m_sampler);
+	glBindTexture(GL_TEXTURE_2D, mesh.getDiffuseTexture().getTexPointer());
 }
 
 void Application::unBindTex()

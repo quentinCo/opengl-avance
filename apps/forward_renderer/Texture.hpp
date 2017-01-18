@@ -20,6 +20,24 @@ public:
 		if (texPointer) glDeleteTextures(1, &texPointer);
 	}
 
+	Texture(const Texture&) = delete;
+	Texture& operator= (const Texture&) = delete;
+
+	Texture(Texture&& o)
+		: texPointer(o.texPointer)
+	{
+		o.texPointer = 0;
+	}
+
+	Texture& operator= (Texture&& o)
+	{
+		texPointer = o.texPointer;
+		o.texPointer = 0;
+
+		return *this;
+	}
+
+
 	GLuint getTexPointer() const
 		{return texPointer;}
 

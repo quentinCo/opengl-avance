@@ -1,11 +1,27 @@
 #include <memory>
 
-#define TINYOBJLOADER_IMPLEMENTATION
+//#define TINYOBJLOADER_IMPLEMENTATION
 
 #include "Scene.hpp"
 
+#include <glmlv/load_obj.hpp>
+
 using namespace qc;
 
+void Scene::addMeshFromObjFile(const PathFile& directory, const std::string& nameFile, const glmlv::GLProgram& program, const glm::vec3& position)
+{
+	glmlv::ObjData objData;
+	PathFile objPath = (directory / nameFile);
+	glmlv::loadObj(objPath, directory, objData);
+	std::cout << "shapeCount: " << objData.shapeCount << std::endl;
+	std::cout << "materialCount: " << objData.materialCount << std::endl;
+	for(size_t i = 0 ; i < objData.shapeCount; i++)
+		std::cout << "Shape " << i << " : " << objData.indexCountPerShape[i] << std::endl;
+
+}
+
+
+/*
 void Scene::addMeshFromObjFile(const PathFile& directory, const std::string& nameFile, const glmlv::GLProgram& program, const glm::vec3& position)
 {
 	std::string inputfile = (directory / nameFile).string();
@@ -120,10 +136,10 @@ void Scene::addMeshFromObjFile(const PathFile& directory, const std::string& nam
 		for (; it != itEnd; it++) 
 			std::cout << "  material." << it->first.c_str() <<" = " << it->second.c_str()<< std::endl;
 	}
-	std::cout << "\n"<< std::endl;*/
+	std::cout << "\n"<< std::endl;
 	
-}
-
+}*/
+/*
 std::pair<size_t, size_t> Scene::findMinMaxIndex(const std::vector<tinyobj::index_t>& indices, std::string& res)
 {
 	size_t size = 0;
@@ -180,3 +196,4 @@ std::pair<size_t, size_t> Scene::findMinMaxIndex(const std::vector<tinyobj::inde
 
 	return minMax;
 }
+*/
