@@ -56,10 +56,10 @@ private:
 
     // Texture
     GLuint u_activeTexture;
-    bool activeTexture = true;
-    GLuint u_KdSampler;
+	bool activeTexture = false;//true;
+   /* GLuint u_KdSampler;
 
-    GLuint m_sampler;
+    GLuint m_sampler;*/
 
 	GLuint u_wireframe;
 	bool wireFrame = false;
@@ -68,11 +68,11 @@ private:
 	void gui(float clearColor[3]);
 
     void initUniforms();
-    void initSampler();
+//    void initSampler();
     void drawScene();
 	void setUniformsMeshValues(const qc::Mesh& mesh);
 	void setUniformsLightDirValue(const qc::Light& dirLight);
 	void setUniformsLightPointLight(const qc::Light& pointLight);
-	void bindTex(const qc::Mesh& mesh);
-    void unBindTex();
+/*	void bindTex(const qc::Mesh& mesh);
+    void unBindTex();*/
 };

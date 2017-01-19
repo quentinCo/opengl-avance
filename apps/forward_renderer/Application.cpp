@@ -99,14 +99,14 @@ Application::Application(int argc, char** argv):
 	scene.addMeshFromObjFile(dir, fileName, m_program, glm::vec3(3, 0, -3));
 
     //Sampler
-    initSampler();
+//    initSampler();
 
 //	tinyTest();
 }
 
 Application::~Application()
 {
-    if (m_sampler) glDeleteSamplers(1, &m_sampler);
+    //if (m_sampler) glDeleteSamplers(1, &m_sampler);
 
     ImGui_ImplGlfwGL3_Shutdown();
     glfwTerminate();
@@ -147,19 +147,19 @@ void Application::gui(float clearColor[3])
 		
 
     // Texture
-    std::string activeTextureButton = activeTexture? "Without Textures": "With Textures";
+    /*std::string activeTextureButton = activeTexture? "Without Textures": "With Textures";
     if (ImGui::Button(activeTextureButton.c_str()))
     {
         activeTexture = !activeTexture;
         unBindTex(); // TO MOVE
     }
-	ImGui::SameLine();
+	ImGui::SameLine();*/
 	std::string activeWireFrame = wireFrame ? "Fill" : "WireFrame";
 	if (ImGui::Button(activeWireFrame.c_str()))
 	{
 		wireFrame = !wireFrame;
-		activeTexture = !wireFrame;
-		unBindTex(); // TO MOVE
+		/*activeTexture = !wireFrame;
+		unBindTex(); // TO MOVE*/
 	}
 
 	ImGui::End();
@@ -179,18 +179,18 @@ void Application::initUniforms()
 	u_pointLightIntensity = glGetUniformLocation(m_program.glId(), "uPointLightIntensity");
 	u_Kd = glGetUniformLocation(m_program.glId(), "uKd");
 
-    u_activeTexture = glGetUniformLocation(m_program.glId(), "uActiveTexture");
+//    u_activeTexture = glGetUniformLocation(m_program.glId(), "uActiveTexture");
 	u_wireframe = glGetUniformLocation(m_program.glId(), "uWireframe");
-    u_KdSampler = glGetUniformLocation(m_program.glId(), "uKdSampler");
+//    u_KdSampler = glGetUniformLocation(m_program.glId(), "uKdSampler");
 }
-
+/*
 void Application::initSampler()
 {
     glGenSamplers(1, &m_sampler);
     glSamplerParameteri(m_sampler, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glSamplerParameteri(m_sampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }
-
+*/
 void Application::drawScene()
 {
 	const std::vector<qc::Mesh>& meshes = scene.getMeshes();
@@ -206,7 +206,7 @@ void Application::drawScene()
 	for (const auto& it : meshes)
 	{
 		setUniformsMeshValues(it);
-		if (activeTexture) bindTex(it);
+//		if (activeTexture) bindTex(it);
 		it.drawMesh();
 	}
 }
@@ -222,8 +222,8 @@ void Application::setUniformsMeshValues(const qc::Mesh& mesh)
 	glUniform3fv(u_Kd, 1, glm::value_ptr(mesh.getDiffuseColor()));
 
 	// "Texture"
-	bool textureOrNot = (activeTexture && mesh.getDiffuseTexture());
-	glUniform1i(u_activeTexture, textureOrNot);
+/*	bool textureOrNot = (activeTexture && mesh.getDiffuseTexture());
+	glUniform1i(u_activeTexture, textureOrNot);*/
 
 	// WireFrame
 	glUniform1i(u_wireframe, wireFrame);
@@ -242,7 +242,7 @@ void Application::setUniformsLightPointLight(const qc::Light& pointLight)
 	glm::vec3 pointLightIntensityVec3 = glm::vec3(pointLight.getLightIntensity());
 	glUniform3fv(u_pointLightIntensity, 1, glm::value_ptr(pointLightIntensityVec3));
 }
-
+/*
 void Application::bindTex(const qc::Mesh& mesh)
 {
 	if (mesh.getDiffuseTexture())
@@ -261,3 +261,4 @@ void Application::unBindTex()
     glBindSampler(0, 0); // MEH
     glBindTexture(GL_TEXTURE_2D, 0);
 }
+*/
