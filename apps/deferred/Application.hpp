@@ -83,18 +83,11 @@ private:
 
     GLuint m_textureSampler = 0; // Only one sampler object since we will use the same sampling parameters for all textures
 
-    glmlv::GLProgram m_program;
-
+    glmlv::GLProgram m_programGeo;
     glmlv::ViewController m_viewController{ m_GLFWHandle.window(), 3.f };
     GLint m_uModelViewProjMatrixLocation;
     GLint m_uModelViewMatrixLocation;
     GLint m_uNormalMatrixLocation;
-
-    GLint m_uDirectionalLightDirLocation;
-    GLint m_uDirectionalLightIntensityLocation;
-
-    GLint m_uPointLightPositionLocation;
-    GLint m_uPointLightIntensityLocation;
 
     GLint m_uKaLocation;
     GLint m_uKdLocation;
@@ -115,6 +108,29 @@ private:
     glm::vec3 m_PointLightColor = glm::vec3(1, 1, 1);
     float m_PointLightIntensity = 5.f;
 
-
+    // Deferred
     GLuint m_GBufferTextures[GBufferTextureCount];
+    GLuint m_FBO;
+
+    int attachedToDraw;
+
+
+    // Shading
+    glmlv::GLProgram m_programShading;
+
+    GLint m_uDirectionalLightDirLocation;
+    GLint m_uDirectionalLightIntensityLocation;
+
+    GLint m_uPointLightPositionLocation;
+    GLint m_uPointLightIntensityLocation;
+
+    GLint m_uGPosition;
+    GLint m_uGNormal;
+    GLint m_uGAmbient;
+    GLint m_uGDiffuse;
+    GLint m_uGlossyShininess;
+
+    GLuint m_ScreenVAO = 0;
+    GLuint m_ScreenVBO = 0;
+    GLuint m_ScreenIBO = 0;
 };

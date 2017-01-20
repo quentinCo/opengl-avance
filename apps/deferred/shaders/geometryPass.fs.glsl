@@ -10,7 +10,7 @@ in vec3 vViewSpacePosition;
 in vec3 vViewSpaceNormal;
 in vec2 vTexCoords;
 
-out vec3 fColor;
+//out vec3 fColor;
 
 uniform vec3 uDirectionalLightDir;
 uniform vec3 uDirectionalLightIntensity;
