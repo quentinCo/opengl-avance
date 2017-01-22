@@ -44,8 +44,8 @@ void main()
         dothPointLight = pow(dothPointLight, shininess);
         dothDirLight = pow(dothDirLight, shininess);
     }
-
-    fColor = ka;
+	fColor = vec3(0);
+    //fColor += ka;
     fColor += kd * (uDirectionalLightIntensity * max(0.f, dot(normal, uDirectionalLightDir)) + pointLightIncidentLight * max(0., dot(normal, dirToPointLight)));
     fColor += ks * (uDirectionalLightIntensity * dothDirLight + pointLightIncidentLight * dothPointLight);
 }

@@ -124,13 +124,17 @@ private:
     GLint m_uPointLightPositionLocation;
     GLint m_uPointLightIntensityLocation;
 
-    GLint m_uGPosition;
+	GLint m_uGTextures[GBufferTextureCount];
+    /*GLint m_uGPosition;
     GLint m_uGNormal;
     GLint m_uGAmbient;
     GLint m_uGDiffuse;
-    GLint m_uGlossyShininess;
+    GLint m_uGlossyShininess;*/
 
     GLuint m_ScreenVAO = 0;
     GLuint m_ScreenVBO = 0;
-    GLuint m_ScreenIBO = 0;
+
+	void initForGeo();
+	void initForShading();
+	void initScreenBuffers();
 };

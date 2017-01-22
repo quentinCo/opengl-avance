@@ -104,7 +104,9 @@ int Application::run()
 */
     // Uniforme Shading
         m_programShading.use();
-
+		/*--------------------------------------------------*/
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // ! \ A NE SURTOUT PAS OUBLIER
+		/*------------------------------------------------*/
         glUniform3fv(m_uDirectionalLightDirLocation, 1, glm::value_ptr(glm::vec3(viewMatrix * glm::vec4(glm::normalize(m_DirLightDirection), 0))));
         glUniform3fv(m_uDirectionalLightIntensityLocation, 1, glm::value_ptr(m_DirLightColor * m_DirLightIntensity));
 
@@ -112,25 +114,24 @@ int Application::run()
         glUniform3fv(m_uPointLightIntensityLocation, 1, glm::value_ptr(m_PointLightColor * m_PointLightIntensity));
 
         // Same sampler for all texture units
-        glBindSampler(0, m_textureSampler);
+      /*  glBindSampler(0, m_textureSampler);
         glBindSampler(1, m_textureSampler);
         glBindSampler(2, m_textureSampler);
         glBindSampler(3, m_textureSampler);
         glBindSampler(4, m_textureSampler);
+		*/
 
-        // Set texture unit of each sampler
-        glUniform1i(m_uGPosition, 0);
-        glUniform1i(m_uGNormal, 1);
-        glUniform1i(m_uGAmbient, 2);
-        glUniform1i(m_uGDiffuse, 3);
-        glUniform1i(m_uGlossyShininess, 4);
-
-        for(int i = 0; i < GBufferTextureType::GBufferTextureCount; i++)
+        for(int i = 0; i < GBufferTextureType::GDepth; i++)
         {
             glActiveTexture(GL_TEXTURE0 + i);
             glBindTexture(GL_TEXTURE_2D, m_GBufferTextures[i]);
+			glUniform1i(m_uGTextures[i], i);
         }
 
+		glBindVertexArray(m_ScreenVAO);
+		glDrawArrays(GL_TRIANGLES, 0, 3);
+		glBindVertexArray(0);
+		
         // GUI code:
         ImGui_ImplGlfwGL3_NewFrame();
 
@@ -317,45 +318,13 @@ Application::Application(int argc, char** argv):
 
     glEnable(GL_DEPTH_TEST);
 
+	m_viewController.setSpeed(m_SceneSize * 0.1f); // Let's travel 10% of the scene per second
+
 // Geo program
-    m_programGeo = glmlv::compileProgram({ m_ShadersRootPath / m_AppName / "geometryPass.vs.glsl", m_ShadersRootPath / m_AppName / "geometryPass.fs.glsl" });
-    m_programGeo.use();
-
-    m_uModelViewProjMatrixLocation = glGetUniformLocation(m_programGeo.glId(), "uModelViewProjMatrix");
-    m_uModelViewMatrixLocation = glGetUniformLocation(m_programGeo.glId(), "uModelViewMatrix");
-    m_uNormalMatrixLocation = glGetUniformLocation(m_programGeo.glId(), "uNormalMatrix");
-
-    m_uKaLocation = glGetUniformLocation(m_programGeo.glId(), "uKa");
-    m_uKdLocation = glGetUniformLocation(m_programGeo.glId(), "uKd");
-    m_uKsLocation = glGetUniformLocation(m_programGeo.glId(), "uKs");
-    m_uShininessLocation = glGetUniformLocation(m_programGeo.glId(), "uShininess");
-    m_uKaSamplerLocation = glGetUniformLocation(m_programGeo.glId(), "uKaSampler");
-    m_uKdSamplerLocation = glGetUniformLocation(m_programGeo.glId(), "uKdSampler");
-    m_uKsSamplerLocation = glGetUniformLocation(m_programGeo.glId(), "uKsSampler");
-    m_uShininessSamplerLocation = glGetUniformLocation(m_programGeo.glId(), "uShininessSampler");
-
-    m_viewController.setSpeed(m_SceneSize * 0.1f); // Let's travel 10% of the scene per second
+	initForGeo();
 
 // Shading program
-    m_programShading = glmlv::compileProgram({ m_ShadersRootPath / m_AppName / "shadingPass.vs.glsl", m_ShadersRootPath / m_AppName / "shadingPass.fs.glsl" });
-    m_programShading.use();
-
-    m_uDirectionalLightDirLocation = glGetUniformLocation(m_programGeo.glId(), "uDirectionalLightDir");
-    m_uDirectionalLightIntensityLocation = glGetUniformLocation(m_programGeo.glId(), "uDirectionalLightIntensity");
-
-    m_uPointLightPositionLocation = glGetUniformLocation(m_programGeo.glId(), "uPointLightPosition");
-    m_uPointLightIntensityLocation = glGetUniformLocation(m_programGeo.glId(), "uPointLightIntensity");
-
-    m_uGPosition = glGetUniformLocation(m_programShading.glId(), "uGPosition");
-    m_uGNormal = glGetUniformLocation(m_programShading.glId(), "uGNormal");
-    m_uGAmbient = glGetUniformLocation(m_programShading.glId(), "uGAmbient");
-    m_uGDiffuse = glGetUniformLocation(m_programShading.glId(), "uGDiffuse");
-    m_uGlossyShininess = glGetUniformLocation(m_programShading.glId(), "uGlossyShininess");
-
-    glGenBuffers(1, &m_SceneVBO);
-    glGenBuffers(1, &m_SceneIBO);
-
-    // TO_DO screen Buffer;
+	initForShading();
 
     // GBufferTexture
     glGenTextures(GBufferTextureType::GBufferTextureCount, m_GBufferTextures);
@@ -395,4 +364,65 @@ Application::Application(int argc, char** argv):
 
     attachedToDraw = GL_COLOR_ATTACHMENT0;
 
+	initScreenBuffers();
+}
+
+void Application::initForGeo()
+{
+	m_programGeo = glmlv::compileProgram({ m_ShadersRootPath / m_AppName / "geometryPass.vs.glsl", m_ShadersRootPath / m_AppName / "geometryPass.fs.glsl" });
+	m_programGeo.use();
+
+	m_uModelViewProjMatrixLocation = glGetUniformLocation(m_programGeo.glId(), "uModelViewProjMatrix");
+	m_uModelViewMatrixLocation = glGetUniformLocation(m_programGeo.glId(), "uModelViewMatrix");
+	m_uNormalMatrixLocation = glGetUniformLocation(m_programGeo.glId(), "uNormalMatrix");
+
+	m_uKaLocation = glGetUniformLocation(m_programGeo.glId(), "uKa");
+	m_uKdLocation = glGetUniformLocation(m_programGeo.glId(), "uKd");
+	m_uKsLocation = glGetUniformLocation(m_programGeo.glId(), "uKs");
+	m_uShininessLocation = glGetUniformLocation(m_programGeo.glId(), "uShininess");
+	m_uKaSamplerLocation = glGetUniformLocation(m_programGeo.glId(), "uKaSampler");
+	m_uKdSamplerLocation = glGetUniformLocation(m_programGeo.glId(), "uKdSampler");
+	m_uKsSamplerLocation = glGetUniformLocation(m_programGeo.glId(), "uKsSampler");
+	m_uShininessSamplerLocation = glGetUniformLocation(m_programGeo.glId(), "uShininessSampler");
+}
+
+void Application::initForShading()
+{
+	m_programShading = glmlv::compileProgram({ m_ShadersRootPath / m_AppName / "shadingPass.vs.glsl", m_ShadersRootPath / m_AppName / "shadingPass.fs.glsl" });
+	m_programShading.use();
+
+	m_uDirectionalLightDirLocation = glGetUniformLocation(m_programShading.glId(), "uDirectionalLightDir");
+	m_uDirectionalLightIntensityLocation = glGetUniformLocation(m_programShading.glId(), "uDirectionalLightIntensity");
+
+	m_uPointLightPositionLocation = glGetUniformLocation(m_programShading.glId(), "uPointLightPosition");
+	m_uPointLightIntensityLocation = glGetUniformLocation(m_programShading.glId(), "uPointLightIntensity");
+
+	m_uGTextures[0] = glGetUniformLocation(m_programShading.glId(), "uGPosition");
+	m_uGTextures[1] = glGetUniformLocation(m_programShading.glId(), "uGNormal");
+	m_uGTextures[2] = glGetUniformLocation(m_programShading.glId(), "uGAmbient");
+	m_uGTextures[3] = glGetUniformLocation(m_programShading.glId(), "uGDiffuse");
+	m_uGTextures[4] = glGetUniformLocation(m_programShading.glId(), "uGlossyShininess");
+}
+
+void Application::initScreenBuffers()
+{
+	glm::vec2 triangle[3];
+	triangle[0] = glm::vec2(-1);
+	triangle[1] = glm::vec2(3, -1);
+	triangle[2] = glm::vec2(-1, 3);
+
+	glGenBuffers(1, &m_ScreenVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, m_ScreenVBO);
+	glBufferStorage(GL_ARRAY_BUFFER, 3 * sizeof(glm::vec2), triangle, 0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+
+	const GLint position = glGetAttribLocation(m_programShading.glId(), "aPosition");
+	glGenVertexArrays(1, &m_ScreenVAO);
+	glBindVertexArray(m_ScreenVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, m_ScreenVBO);
+	glEnableVertexAttribArray(position);
+	glVertexAttribPointer(position, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), 0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
 }
