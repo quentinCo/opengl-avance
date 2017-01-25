@@ -39,7 +39,7 @@ private:
 
     const size_t m_nWindowWidth = 1280;
     const size_t m_nWindowHeight = 720;
-    glmlv::GLFWHandle m_GLFWHandle{ m_nWindowWidth, m_nWindowHeight, "Template" }; // Note: the handle must be declared before the creation of any object managing OpenGL resource (e.g. GLProgram, GLShader)
+    glmlv::GLFWHandle m_GLFWHandle{ static_cast<int>(m_nWindowWidth), static_cast<int>(m_nWindowHeight), "Template" }; // Note: the handle must be declared before the creation of any object managing OpenGL resource (e.g. GLProgram, GLShader)
 
     const glmlv::fs::path m_AppPath;
     const std::string m_AppName;
@@ -62,6 +62,8 @@ private:
 
     std::vector<ShapeInfo> m_shapes; // For each shape of the scene, its number of indices
     float m_SceneSize = 0.f; // Used for camera speed and projection matrix parameters
+    glm::vec3 m_BBoxMin = glm::vec3(0);
+    glm::vec3 m_BBoxMax = glm::vec3(0);
 
     struct PhongMaterial
     {
@@ -134,6 +136,9 @@ private:
 	GLint m_uDirectionalLightDirLocation;
 	GLint m_uDirectionalLightIntensityLocation;
 
+    Glint m_uDirLightShadowMap;
+    GLint m_uDirLightShadowMapBias;
+
 	GLint m_uPointLightPositionLocation;
 	GLint m_uPointLightIntensityLocation;
 
@@ -141,10 +146,20 @@ private:
 
     GLint m_uWindowsDim;
 
-    
+    // Shadow Map
+    glmlv::GLProgram m_directionalSMProgram;
+    GLint m_uDirLightViewProjMatrix;
+
+    GLuint m_directionalSMTexture;  // Id texture
+    GLuint m_directionalSMFBO;      // Id FBO pour depth map
+    GLuint m_directionalSMSampler;  // Id sampler texture
+    int32_t m_nDirectionalSMResolution = 512;   // resolution texture
+
+
 	// Some initialisation functions
 	void initForGeo();
 	void initForShading();
 	void initScreenBuffers();
 	void initForCompute();
+    void initForShadowMap();
 };

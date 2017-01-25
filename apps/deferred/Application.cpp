@@ -16,11 +16,55 @@
 int Application::run()
 {
     float clearColor[3] = { 0, 0, 0 };
+
+    bool directionalSMDirty = true; // to know if we change the directional light.
+
     // Loop until the user closes the window
     for (auto iterationCount = 0u; !m_GLFWHandle.shouldClose(); ++iterationCount)
     {
         const auto seconds = glfwGetTime();
         const auto viewportSize = m_GLFWHandle.framebufferSize();
+
+        // Shadow Map
+        static const auto computeDirectionVectorUp = [](float phiRadians, float thetaRadians)
+        {
+            const auto cosPhi = glm::cos(phiRadians);
+            const auto sinPhi = glm::sin(phiRadians);
+            const auto cosTheta = glm::cos(thetaRadians);
+            return -glm::normalize(glm::vec3(sinPhi * cosTheta, -glm::sin(thetaRadians), cosPhi * cosTheta));
+        };
+
+        const auto sceneCenter = 0.5f * (m_BBoxMin + m_BBoxMax);
+        //const float sceneRadius = m_SceneSizeLength * 0.5f;
+        const float sceneRadius = m_SceneSize * 0.5f;
+
+        const auto dirLightUpVector = computeDirectionVectorUp(glm::radians(m_DirLightPhiAngleDegrees), glm::radians(m_DirLightThetaAngleDegrees));
+        const auto dirLightViewMatrix = glm::lookAt(sceneCenter + m_DirLightDirection * sceneRadius, sceneCenter, dirLightUpVector); // Will not work if m_DirLightDirection is colinear to lightUpVector
+        const auto dirLightProjMatrix = glm::ortho(-sceneRadius, sceneRadius, -sceneRadius, sceneRadius, 0.01f * sceneRadius, 2.f * sceneRadius);
+
+        if(directionalSMDirty)
+        {
+            m_directionalSMProgram.use();
+            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_directionalSMFBO);
+            glViewport(0, 0, m_nDirectionalSMResolution, m_nDirectionalSMResolution);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+            //dirLightProjMatrix * dirLightViewMatrix
+            glUniformMatrix4fv(m_uDirLightViewProjMatrix, 1, GL_FALSE, glm::value_ptr(dirLightProjMatrix * dirLightViewMatrix));
+
+            glBindVertexArray(m_SceneVAO);
+            for(const auto shape : m_shapes)
+            {
+                glDrawElements(GL_TRIANGLES, shape.indexCount, GL_UNSIGNED_INT, (const GLvoid*)(shape.indexOffset * sizeof(GLuint)));
+            }
+
+            glBindVertexArray(0);
+
+            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+
+            directionalSMDirty = false;
+        }
+
 
         m_programGeo.use();
 
@@ -181,6 +225,7 @@ int Application::run()
                 if (ImGui::DragFloat("Phi Angle", &m_DirLightPhiAngleDegrees, 1.0f, 0.0f, 360.f) ||
                     ImGui::DragFloat("Theta Angle", &m_DirLightThetaAngleDegrees, 1.0f, 0.0f, 180.f)) {
                     m_DirLightDirection = computeDirectionVector(glm::radians(m_DirLightPhiAngleDegrees), glm::radians(m_DirLightThetaAngleDegrees));
+                    directionalSMDirty = true;
                 }
             }
 
@@ -230,7 +275,9 @@ Application::Application(int argc, char** argv):
         const auto objPath = m_AssetsRootPath / m_AppName / "models" / "crytek-sponza" / "sponza.obj";
         glmlv::ObjData data;
         loadObj(objPath, data);
-        m_SceneSize = glm::length(data.bboxMax - data.bboxMin);
+        m_BBoxMax = data.bboxMax;
+        m_BBoxMin = data.bboxMin;
+        m_SceneSize = glm::length(m_BBoxMax - m_BBoxMin);
 
         std::cout << "# of shapes    : " << data.shapeCount << std::endl;
         std::cout << "# of materials : " << data.materialCount << std::endl;
@@ -386,6 +433,9 @@ Application::Application(int argc, char** argv):
 	initScreenBuffers();
 
 	initForCompute();
+
+    initForShadowMap();
+
     std::cout << "End INIT" << std::endl;
 }
 
@@ -454,6 +504,7 @@ void Application::initForCompute()
 	glGenTextures(1, &m_screenTexture);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, m_screenTexture);
+    // TO DO -> REVOIR avec code shadow map (FBO)
 	/*glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB32F, m_nWindowWidth, m_nWindowHeight);
 	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_nWindowWidth, m_nWindowHeight, GL_RGBA, GL_FLOAT, nullptr); // nullptr ???? Tuto -> Meh
 	glBindImageTexture(0, m_screenTexture, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
@@ -505,5 +556,46 @@ void Application::initForCompute()
 
     m_uWindowsDim = glGetUniformLocation(m_programCompute.glId(), "uWindowsDim");
 
+    m_uDirLightShadowMap = glGetUniformLocation(m_programCompute.glId(), "uDirLightShadowMap");
+    m_uDirLightShadowMapBias = glGetUniformLocation(m_programCompute.glId(), "uDirLightShadowMapBias");
+
     std::cout << "End initForCompute() " << std::endl;
+}
+
+void Application::initForShadowMap()
+{
+    m_directionalSMProgram = glmlv::compileProgram({ m_ShadersRootPath / m_AppName / "directionalSM.vs.glsl", m_ShadersRootPath / m_AppName / "directionalSM.fs.glsl" });
+    m_directionalSMProgram.use();
+    m_uDirLightViewProjMatrix = glGetUniformLocation(m_directionalSMProgram.glId(), "uDirLightViewProjMatrix");
+
+    // Texture init
+    glGenTextures(1, &m_directionalSMTexture);
+
+    glBindTexture(GL_TEXTURE_2D, m_directionalSMTexture);
+    glTexStorage2D(GL_TEXTURE_2D, 1, GL_DEPTH_COMPONENT32F, m_nDirectionalSMResolution, m_nDirectionalSMResolution);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    // FBO init
+    glGenFramebuffers(1, &m_directionalSMFBO);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_directionalSMFBO);
+
+    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_directionalSMFBO, 0);
+
+    GLenum drawBuffers[] = {GL_DEPTH_ATTACHMENT};
+    glDrawBuffers(1, drawBuffers);
+  
+    GLenum res = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
+    if(res != GL_FRAMEBUFFER_COMPLETE)
+        std::cerr << "Error check shadow map frame buffer : " << res  << std::endl;
+
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+
+    // Sampler
+    glGenSamplers(1, &m_directionalSMSampler);
+    glSamplerParameteri(m_directionalSMSampler, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glSamplerParameteri(m_directionalSMSampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glSamplerParameteri(m_directionalSMSampler, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glSamplerParameteri(m_directionalSMSampler, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+
+    std::cout << "End initForShadowMap()" << std::endl;
 }

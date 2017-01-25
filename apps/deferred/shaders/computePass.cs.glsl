@@ -17,7 +17,20 @@ uniform sampler2D uGAmbient;
 uniform sampler2D uGDiffuse;
 uniform sampler2D uGlossyShininess;
 
+// Shadow map
+uniform mat4 uDirLightViewProjMatrix; // utile pour le changement d'espace camera -> light
+uniform sampler2D uDirLightShadowMap;
+uniform float uDirLightShadowMapBias;
+
 uniform vec2 uWindowsDim;
+
+float getDirLightVisibility(vec3 position)
+{
+    vec4 positionInDirLightScreen = uDirLightViewProjMatrix * vec4(position, 1);    // Projection
+    vec3 positionInDirLightNDC = vec3(positionInDirLightScreen / positionInDirLightScreen.w) * 0.5 + 0.5;   // Homogénisation xyz [-1;1]
+    float depthBlockerInDirSpace = texture(uDirLightShadowMap, positionInDirLightNDC.xy).r; // Lecture Depth
+    return (positionInDirLightNDC.z < depthBlockerInDirSpace + uDirLightShadowMapBias) ? 1.0 : 0.0;
+}
 
 void main()
 {
@@ -26,6 +39,8 @@ void main()
     if(pixelCoords.x < uWindowsDim.x && pixelCoords.y < uWindowsDim.y)
     {
         vec3 position = vec3(texelFetch(uGPosition, pixelCoords, 0)); // Correspond a vViewSpacePosition dans le forward renderer
+
+        float dirLightVisibility = getDirLightVisibility(position);
 
         vec3 ka = vec3(texelFetch(uGAmbient, pixelCoords, 0)); 
         vec3 kd = vec3(texelFetch(uGDiffuse, pixelCoords, 0));
