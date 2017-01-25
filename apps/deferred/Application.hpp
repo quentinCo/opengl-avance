@@ -118,23 +118,30 @@ private:
     // Shading
     glmlv::GLProgram m_programShading;
 
-    GLint m_uDirectionalLightDirLocation;
-    GLint m_uDirectionalLightIntensityLocation;
-
-    GLint m_uPointLightPositionLocation;
-    GLint m_uPointLightIntensityLocation;
-
-	GLint m_uGTextures[GBufferTextureCount];
-    /*GLint m_uGPosition;
-    GLint m_uGNormal;
-    GLint m_uGAmbient;
-    GLint m_uGDiffuse;
-    GLint m_uGlossyShininess;*/
-
+	GLint m_uScreenTexture;
+	
     GLuint m_ScreenVAO = 0;
     GLuint m_ScreenVBO = 0;
 
+	// Compute shader
+	glmlv::GLProgram m_programCompute;
+	GLuint m_screenTexture = 0;
+
+	int m_workGroupCount[3];
+	int m_workGroupSize[3];
+	int m_workGroupInvocation;
+	
+	GLint m_uDirectionalLightDirLocation;
+	GLint m_uDirectionalLightIntensityLocation;
+
+	GLint m_uPointLightPositionLocation;
+	GLint m_uPointLightIntensityLocation;
+
+	GLint m_uGTextures[GBufferTextureCount];
+
+	// Some initialisation functions
 	void initForGeo();
 	void initForShading();
 	void initScreenBuffers();
+	void initForCompute();
 };
