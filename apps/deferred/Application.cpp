@@ -1,6 +1,7 @@
 #include "Application.hpp"
 
 #include <iostream>
+#include <math.h>  
 #include <unordered_set>
 
 #include <imgui.h>
@@ -113,6 +114,8 @@ int Application::run()
 		glUniform3fv(m_uPointLightPositionLocation, 1, glm::value_ptr(glm::vec3(viewMatrix * glm::vec4(m_PointLightPosition, 1))));
 		glUniform3fv(m_uPointLightIntensityLocation, 1, glm::value_ptr(m_PointLightColor * m_PointLightIntensity));
 
+        glUniform2fv(m_uWindowsDim, 1, glm::value_ptr(glm::vec2(m_nWindowWidth, m_nWindowHeight)));
+
 		for (int i = 0; i < GBufferTextureType::GDepth; i++)
 		{
 			glActiveTexture(GL_TEXTURE0 + i);
@@ -120,7 +123,18 @@ int Application::run()
 			glUniform1i(m_uGTextures[i], i);
 		}
 
-		glDispatchCompute((GLuint)(m_nWindowWidth / 32), (GLuint)(m_nWindowHeight / 32), 1); // A revoir 
+		glDispatchCompute((GLuint)ceil(m_nWindowWidth / 32.f), (GLuint)ceil(m_nWindowHeight / 32.f), 1);
+        GLenum err = glGetError();
+        if(err != GL_NO_ERROR)
+        {
+            int xGroup = ceil(m_nWindowWidth / 32.f) * 32;
+            int yGroup = ceil(m_nWindowHeight / 32.f) * 32;
+            std::cout << m_nWindowWidth << " -- " <<  m_nWindowHeight << std::endl;
+            std::cout << xGroup << " -- " <<  yGroup << " -- " << yGroup * xGroup << std::endl;
+            std::cout << m_workGroupInvocation << std::endl;
+            std::cerr << "glGetError() : " << err << std::endl;
+            exit(1);
+        }
 		// make sure writing to image has finished before read
 		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
@@ -372,6 +386,7 @@ Application::Application(int argc, char** argv):
 	initScreenBuffers();
 
 	initForCompute();
+    std::cout << "End INIT" << std::endl;
 }
 
 void Application::initForGeo()
@@ -391,6 +406,8 @@ void Application::initForGeo()
 	m_uKdSamplerLocation = glGetUniformLocation(m_programGeo.glId(), "uKdSampler");
 	m_uKsSamplerLocation = glGetUniformLocation(m_programGeo.glId(), "uKsSampler");
 	m_uShininessSamplerLocation = glGetUniformLocation(m_programGeo.glId(), "uShininessSampler");
+    
+    std::cout << "End initForGeo() " << std::endl;
 }
 
 void Application::initForShading()
@@ -399,6 +416,8 @@ void Application::initForShading()
 	m_programShading.use();
 
 	m_uScreenTexture = glGetUniformLocation(m_programShading.glId(), "uScreenTexture");
+    
+    std::cout << "End initForShading() " << std::endl;
 }
 
 void Application::initScreenBuffers()
@@ -422,6 +441,8 @@ void Application::initScreenBuffers()
 	glVertexAttribPointer(position, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), 0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
+    
+    std::cout << "End initScreenBuffers() " << std::endl;
 }
 
 void Application::initForCompute()
@@ -450,13 +471,25 @@ void Application::initForCompute()
 	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &m_workGroupCount[1]);
 	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &m_workGroupCount[2]);
 
+    std::cout << "m_workGroupCount" << std::endl;
+    for(int i = 0; i < 3; ++i)
+        std::cout << m_workGroupCount[i] << " - ";
+    std::cout << std::endl;
+
 	// Retrieve work group size max
 	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 0, &m_workGroupSize[0]);
 	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 1, &m_workGroupSize[1]);
 	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2, &m_workGroupSize[2]);
 
+    std::cout << "m_workGroupSize" << std::endl;
+    for(int i = 0; i < 3; ++i)
+        std::cout << m_workGroupSize[i] << " - ";
+    std::cout << std::endl;
+
 	// Retrieve work group invocation
 	glGetIntegerv(GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS, &m_workGroupInvocation);
+    std::cout << "m_workGroupInvocation : " << m_workGroupInvocation << std::endl;
+
 
 	m_uDirectionalLightDirLocation = glGetUniformLocation(m_programCompute.glId(), "uDirectionalLightDir");
 	m_uDirectionalLightIntensityLocation = glGetUniformLocation(m_programCompute.glId(), "uDirectionalLightIntensity");
@@ -469,4 +502,8 @@ void Application::initForCompute()
 	m_uGTextures[2] = glGetUniformLocation(m_programCompute.glId(), "uGAmbient");
 	m_uGTextures[3] = glGetUniformLocation(m_programCompute.glId(), "uGDiffuse");
 	m_uGTextures[4] = glGetUniformLocation(m_programCompute.glId(), "uGlossyShininess");
+
+    m_uWindowsDim = glGetUniformLocation(m_programCompute.glId(), "uWindowsDim");
+
+    std::cout << "End initForCompute() " << std::endl;
 }

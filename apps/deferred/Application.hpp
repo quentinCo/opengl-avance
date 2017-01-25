@@ -139,6 +139,9 @@ private:
 
 	GLint m_uGTextures[GBufferTextureCount];
 
+    GLint m_uWindowsDim;
+
+    
 	// Some initialisation functions
 	void initForGeo();
 	void initForShading();
